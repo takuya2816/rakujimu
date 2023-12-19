@@ -1,7 +1,6 @@
 import boto3
 import json
 import time
-import decimal
 import datetime
 
 # DynamoDBオブジェクト
@@ -26,25 +25,33 @@ def lambda_handler(event, context):
     try:
         # シーケンスデータを得る
         seqtable = dynamodb.Table('sequence')
-        nextseq = get_next_seq(seqtable, 'accountbook')
+        nextseq = get_next_seq(seqtable, 'CustomerMst')
         
         ## フォームに入力されたデータを得る
         param = json.loads(event['body'])
+        customerid = param['id']
+        lineid = param['lineid']
+        name = param['name']
+        address = param['address']
+        gender = param['gender']
+        mailaddress = param['mailaddress']
         date = param['date']
-        expense = param['expenses']
-        memo = param['memo']
         
         # 現在の時刻を取得
         nowtime = time.time()
         timestamp = datetime.datetime.fromtimestamp(nowtime)
-        # accountbook テーブルに登録する
-        table = dynamodb.Table('accountbook')
+        # CustomerMst テーブルに登録する
+        table = dynamodb.Table('CustomerMst')
         table.put_item(
             Item = {
                 'id' : nextseq,
-                'used_date' : date,
-                'expense' : decimal.Decimal(expense),
-                'memo' : memo,
+                'customer_id' : customerid,
+                'line_id' : lineid,
+                'name' : name,
+                'address' : address,
+                'gender' : gender,
+                'mailaddress' : mailaddress,
+                'date' : date,
                 'update_datetime' : str(timestamp)
             }
         )
