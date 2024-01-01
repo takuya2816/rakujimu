@@ -10,7 +10,7 @@
     <script type="text/javascript">
         $(document).ready(function () {
             // ページ読み込み時に実行したい処理
-            var apiurl = "https://8fgo2gh19e.execute-api.ap-northeast-1.amazonaws.com/default/GetCustomerMst";
+            var apiurl = "https://4om5vxifil.execute-api.ap-northeast-1.amazonaws.com/rakujimu-1/GetCustomerMst";
 
             $.ajax({
                 url: apiurl,
@@ -20,13 +20,13 @@
                 // Ajaxリクエストが成功した時発動
                 .done(function (response) {
                     var item = response.Items;
-                    var table = document.getElementById('accountbooktable');
+                    var table = document.getElementById('CustomerMsttable');
                     for (let i = 0; i < item.length; i++) {
                         var tr = $('<tr></tr>').appendTo(table);
                         $('<td>' + item[i].id + '</td>').appendTo(tr);
-                        $('<td>' + item[i].used_date + '</td>').appendTo(tr);
-                        $('<td>' + item[i].expense + '</td>').appendTo(tr);
-                        $('<td>' + item[i].memo + '</td>').appendTo(tr);
+                        $('<td>' + item[i].customer_id + '</td>').appendTo(tr);
+                        $('<td>' + item[i].gender + '</td>').appendTo(tr);
+                        $('<td>' + item[i].mailaddress + '</td>').appendTo(tr);
                     }
 
                 })
@@ -59,7 +59,7 @@
                         <th style="width: 20%">メモ</th>
                     </tr>
                 </thead>
-                <tbody id='accountbooktable'>
+                <tbody id='CustomerMsttable'>
                 </tbody>
             </table>
         </div>
