@@ -6,31 +6,60 @@
         </div>
         <div class="message">
             <p>
-                XXXXXXの予約申込を行います<br>
-                予約確定後に、店舗からご連絡申し上げます<br>
+                指定の日時を選択してください<br>
+                ◎：予約可能　✖：予約不可<br>
                 ※送信時にサービス規約に同意したものとみなします
             </p>
         </div>
         <div class="contactForm">
             <div class="form-group">
-                <label for="name">■お名前</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="birthday">■生年月日</label>
-                <input type="text" id="birthday" name="birthday" required>
-            </div>
-            <div class="form-group">
-                <label for="gender">■性別</label>
-                <input type="text" id="gender" name="gender" required>
-            </div>
-            <div class="form-group">
-                <label for="tel">■電話</label>
-                <input type="text" id="tel" name="tel">
-            </div>
-            <div class="form-group">
-                <label for="email">■メールアドレス</label>
-                <input type="text" id="email" name="email" required>
+                <label for="datetime">■施術開始時間</label>
+                <div class="week-move">
+                    <button class="prev" >前に</button>
+                    <button class="next" >後に</button>
+                </div>
+                <table>
+                    <tr>
+                        <th>日付</th>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                    </tr>
+                    <tr>
+                        <th>11:00</th>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                    </tr>
+                    <tr>
+                        <th>11:15</th>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                    </tr>
+                    <tr>
+                    <th>11:30</th>
+                    <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                    </tr>
+                    <tr>
+                    <th>見出し</th>
+                    <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                        <td>〇</td>
+                    </tr>
+                </table>
             </div>
             <button class="send" @click="sendData">送信</button>
         </div>
@@ -40,6 +69,9 @@
 <script>
 import axios from 'axios';
 export default {
+    // css: [
+    //     '~/styles/reserve.css',
+    // ],
     data() {
         return {
             accessToken: "",
@@ -65,6 +97,7 @@ export default {
                 return null
             }
         },
+
         async getUserProfile(accessToken) {  // ユーザ情報を取得
             try {
                 const response = await axios.get(`https://api.line.me/v2/profile`, {
