@@ -13,7 +13,7 @@ import requests
 #LOGGER_LEVEL = os.environ.get("LOGGER_LEVEL")
 #CHANNEL_TYPE = os.environ.get("CHANNEL_TYPE")
 #CHANNEL_ID = os.getenv('OA_CHANNEL_ID', None)
-LIFF_CHANNEL_ID = os.getenv('LIFF_CHANNEL_ID', None)
+LIFF_CHANNEL_ID = 2000948278-yXl6L5MR #os.getenv('LIFF_CHANNEL_ID', None)
 
 # DynamoDBオブジェクト
 dynamodb = boto3.resource('dynamodb')
