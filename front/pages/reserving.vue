@@ -69,12 +69,10 @@
 <script>
 import axios from 'axios';
 export default {
-    // css: [
-    //     '~/styles/reserve.css',
-    // ],
     data() {
         return {
             accessToken: "",
+            display_days:""
         }
     },
     mounted() {
