@@ -27,7 +27,7 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Methods': 'POST,GET',
                 'Access-Control-Allow-Origin': '*'
             },
-            "body": json.dumps(response)
+            "body": json.dumps(response, cls=DecimalEncoder)
         }
         
     except:

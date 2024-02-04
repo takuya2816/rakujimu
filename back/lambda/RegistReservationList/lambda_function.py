@@ -1,10 +1,24 @@
 import boto3
 import json
 import time
+import os
+#from common import (common_const, utils, line)
+import logging
 import datetime
+
+# 環境変数
+#REMIND_DATE_DIFFERENCE = int(os.getenv(
+#    'REMIND_DATE_DIFFERENCE'))
+#LOGGER_LEVEL = os.environ.get("LOGGER_LEVEL")
+#CHANNEL_TYPE = os.environ.get("CHANNEL_TYPE")
+#CHANNEL_ID = os.getenv('OA_CHANNEL_ID', None)
+LIFF_CHANNEL_ID = os.getenv('LIFF_CHANNEL_ID', None)
 
 # DynamoDBオブジェクト
 dynamodb = boto3.resource('dynamodb')
+
+# ログ出力の設定
+logger = logging.getLogger()
 
 # 連番を採番して返す関数
 def get_next_seq(table, tablename):
@@ -20,11 +34,10 @@ def get_next_seq(table, tablename):
     )
     return response['Attributes']['seq']
 
-
 def lambda_handler(event, context):
     try:
         # パラメータログ、チェック
-        #logger.info(event)
+        logger.info(event)
         #body = json.loads(event['body'])
         #if body is None:
         #    error_msg_display = common_const.const.MSG_ERROR_NOPARAM
@@ -32,36 +45,48 @@ def lambda_handler(event, context):
     
         # シーケンスデータを得る
         seqtable = dynamodb.Table('sequence')
-        nextseq = get_next_seq(seqtable, 'CustomerMst')
+        nextseq = get_next_seq(seqtable, 'ReservationList')
         
         ## フォームに入力されたデータを得る
         param = json.loads(event['body'])
-        lineid = param['lineid']
-        name = param['name']
-        if not param['address']: #住所はnullOK
-            address = "None"
-        else:
-            address = param['address']
-        gender = param['gender']
-        mailaddress = param['mailaddress']
-        phonenumber = param['phonenumber']
-        date = param['date']
+        
+        #ユーザーID取得
+        try:
+            user_profile = line.get_profile(
+                param['idToken'], LIFF_CHANNEL_ID)
+            if 'error' in user_profile and 'expired' in user_profile['error_description']:  # noqa 501
+                return {
+                    'statusCode' : 403
+                }
+            else:
+                lineid = user_profile['sub']
+        except Exception:
+            logger.exception('不正なIDトークンが使用されています')
+            return {
+                'statusCode' : 403
+            }
+
+        datetime = param['datetime']
+        resist_reserve_date = param['resist_datetime']
+        employee = param['employee']
+        serviceid = param['serviceid']
+        memo = param['memo']
         
         # 現在の時刻を取得
         nowtime = time.time()
         timestamp = datetime.datetime.fromtimestamp(nowtime)
         # CustomerMst テーブルに登録する
-        table = dynamodb.Table('CustomerMst')
+        table = dynamodb.Table('ReservationList')
         table.put_item(
             Item = {
                 'id' : nextseq,
+                'resist_reserve_date' : resist_reserve_date,
+                'reserve_date' : datetime,
                 'line_id' : lineid,
-                'name' : name,
-                'address' : address,
-                'gender' : gender,
-                'mailaddress' : mailaddress,
-                'phone_number' : phonenumber,
-                'date' : date,
+                'employee_id' : employee,
+                'service_id' : serviceid,
+                'approval_flag' : 'false',
+                'memo' : memo,
                 'update_datetime' : str(timestamp)
             }
         )
