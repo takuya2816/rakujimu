@@ -7,7 +7,7 @@ import logging
 import datetime
 import requests
 
-# 環境変数
+# 環境変数 Todo:リファクタリング
 #REMIND_DATE_DIFFERENCE = int(os.getenv(
 #    'REMIND_DATE_DIFFERENCE'))
 #LOGGER_LEVEL = os.environ.get("LOGGER_LEVEL")
@@ -21,7 +21,7 @@ dynamodb = boto3.resource('dynamodb')
 # ログ出力の設定
 logger = logging.getLogger()
 
-# 共通変数
+# 共通変数 Todo:リファクタリング
 API_USER_ID_URL = 'https://api.line.me/oauth2/v2.1/verify'
 
 # 連番を採番して返す関数
