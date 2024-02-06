@@ -1,3 +1,4 @@
+<!-- 日時選択画面　フォームを送信 -->
 <template>
     <div>   
         <div class="title">
@@ -76,13 +77,13 @@ export default {
         }
     },
     mounted() {
-        this.$liffInit
-        .then(() => {
-            pass
-        })
-        .catch((error) => {
-            this.liffError = error;
-        });
+        // this.$liffInit
+        // .then(() => {
+        //     pass
+        // })
+        // .catch((error) => {
+        //     this.liffError = error;
+        // });
     },
 
     methods: {

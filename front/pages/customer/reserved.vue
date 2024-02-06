@@ -1,3 +1,4 @@
+<!-- 予約完了画面 -->
 <template>
     <div>   
         <div class="title">
