@@ -111,21 +111,8 @@ button.send{
     width: 100%;
     justify-content: space-between;
 }
-button.prev{
-    background-color: #A19E9E;
-    border-radius: 5px;
-    color: white;
-    padding: 6px 6px;
-    margin: 5px 0;
-    border: none;
-    cursor: pointer;
-    width: 15%;
-}
-button.next{
-    background-color: #A19E9E;
-    border-radius: 5px;
-    color: white;
-    padding: 6px 6px;
+.prev　.next{
+    color: #A19E9E;
     margin: 5px 0;
     border: none;
     cursor: pointer;
@@ -144,8 +131,13 @@ table th,table td{
     padding: 3px 0;
 }
 
+table td.head{
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+}
+
 table th{
-    background-color: #bfbfbf;
+    background-color: #ffffff;
     color: rgb(0, 0, 0);
     border:solid 1px #000000;
     width: 14%;
@@ -154,4 +146,5 @@ table th{
 table td{
     background-color: #D9D9D9;
     border:solid 1px #636363;
+    width: 10%;
 }
