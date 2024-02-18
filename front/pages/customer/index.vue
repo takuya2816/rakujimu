@@ -103,13 +103,19 @@ export default {
                 await this.getUserProfile(accessToken);
             }
         },
-        async getMenuList(){  // TODO: メニューリストを取得
+        async getMenuList(){  // メニューリストを取得
             const apiurl = "https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetServiceMst";
             const res = await Common.gateway_get(apiurl);
             this.menulist = res.Items;
         },
         reserve() {
-            this.$router.push("/customer/selectdate");
+            this.$router.push({
+                path:"/customer/selectdate",
+                query: {
+                    id: customerId,
+                    date: appointmentDate,
+                }
+            });  // TODO:パラメータの変更
         },
     },
 };
