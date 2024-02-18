@@ -30,13 +30,10 @@
                         </tr>
                         <tr v-for="times in display_times">
                             <th>{{ times }}</th>
-                            <td>◎</td>
-                            <td>◎</td>
-                            <td>◎</td>
-                            <td>◎</td>
-                            <td>◎</td>
-                            <td>◎</td>
-                            <td>◎</td>
+                            <tr v-for="day in display_days">
+                                <td v-if="reservable_dict[day].includes(times)">◎</td>
+                                <td v-else>×</td>
+                            </tr>
                         </tr>
                     </table>
                 </div>
@@ -55,7 +52,7 @@ export default {
         return {
             display_days: "",
             display_times: "",
-            reservable_list: "",
+            reservable_dict: "",  // {2024-02-14:[11:15,11:30,...], 2024-02-15:[]}の形
             fullname: "",
             birthday: "",
             gender: "",
@@ -138,23 +135,19 @@ export default {
         },
 
         async getReservableList() {  // TODO
-            // const apiurl = "https://4om5vxifil.execute-api.ap-northeast-1.amazonaws.com/rakujimu-1/GetReservableList";
-            // const data = {
-            //     'date': this.value,
-            // };
-            // const response = await Common.gateway_post(apiurl, data);
-            // this.display_days = response.data.display_days;
-            // this.reservable_list = response.data.reservable_list;
-            this.reservable_list = [
-                "",
-            ]
+            const apiurl = "https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservableList";
+            const data = {
+                'display_days': this.display_days,
+            };
+            const response = await Common.gateway_get(apiurl, data);  // TODO:{2024-02-14:[11:15,11:30,...], 2024-02-15:[]}の形
+            this.reservable_dict = response.data.reservable_dict;
         },
         async postForm() {
             await this.getUserInfo();
             console.log("getUserInfo completed");
             var apiurl = "https://4om5vxifil.execute-api.ap-northeast-1.amazonaws.com/rakujimu-1/RegistCustomerMst";
             var data = {
-                'id': 'test',  // ask:自動採番だからいらない
+                'id': 'test',
                 'lineid': this.lineId,
                 'fullname': document.getElementById('fullname').value,
                 'date': document.getElementById('birthday').value,  // ask:dynamo dateになっている
