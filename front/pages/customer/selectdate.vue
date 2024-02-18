@@ -20,7 +20,7 @@
                         <div class="prev" @click="getPrevWeek" >＜前週</div>
                         <div class="next" @click="getNextWeek">翌週＞</div>
                     </div>
-                    <table>
+                    <table class="customer-rsv">
                         <tr>
                             <th>日付</th>
                             <td class="head" v-for="day in display_days">
@@ -159,5 +159,7 @@ export default {
             Common.gateway_post(apiurl, data);
         },
     },
+    // templateの選択
+    layout: 'customer',
 };
 </script>

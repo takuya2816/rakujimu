@@ -37,6 +37,9 @@ def lambda_handler(event, context):
         ## フォームに入力されたデータを得る
         param = json.loads(event['body'])
         lineid = param['lineid']
+        ## Todo:既に登録されている場合
+
+        
         name = param['name']
         if not param['address']: #住所はnullOK
             address = "None"
