@@ -24,7 +24,7 @@
                         <tr>
                             <th>日付</th>
                             <td class="head" v-for="day in display_days">
-                                <div class="date">{{ getDateStr(day) }}</div>
+                                <div class="date">{{ getDateYYYYMM(day) }}</div>
                                 <div class="dayofweek">{{ getDayofweek(day) }}</div>
                             </td>
                         </tr>
@@ -52,7 +52,7 @@ export default {
         return {
             display_days: "",
             display_times: "",
-            reservable_dict: "",  // {2024-02-14:[11:15,11:30,...], 2024-02-15:[]}の形
+            reservable_dict: "",  // {20240214:[11:15,11:30,...], 20240215:[]}の形
             fullname: "",
             birthday: "",
             gender: "",
@@ -84,7 +84,8 @@ export default {
             for (let i = 0; i < 7; i++) {
                 var focus_day = new Date(firstDayOfWeek.getTime());
                 focus_day.setDate(focus_day.getDate() + i); // i日加算
-                dayList.push(focus_day);
+                const formattedDate = `${focus_day.getFullYear()}${(focus_day.getMonth() + 1).toString().padStart(2, '0')}${focus_day.getDate().toString().padStart(2, '0')}`;
+                dayList.push(formattedDate);
             }
             this.display_days = dayList;
         },
@@ -114,21 +115,52 @@ export default {
             return dayOfWeekStr;
         },
 
-        getDateStr(date) {
+        getTimeIntervals(startTime, endTime, interval) {
+            const result = [];
+            let current = new Date(`2020-01-01 ${startTime}`);
+            const end = new Date(`2020-01-01 ${endTime}`);
+
+            const interval = interval * 60 * 1000;
+
+            while (current.getTime() < end.getTime()) { // 終了時刻を含まないように変更
+                // 時間を"HH:mm"形式で配列に追加
+                const time = `${current.getHours().toString().padStart(2, '0')}:${current.getMinutes().toString().padStart(2, '0')}`;
+                result.push(time);
+
+                // 次の時間に更新
+                current = new Date(current.getTime() + interval);
+            }
+
+            return result;
+}
+
+
+        getDateYYYYMM(yyyyMMdd) {
+            const dateObj = parseYYYYMMDDToDate(yyyyMMdd);
+            var date = new Date(dateObj);
             const month = date.getMonth() + 1;
             const day = date.getDate();
             return `${month}/${day}`;
         },
 
+        parseYYYYMMDDToDate(yyyyMMdd) {
+            const year = parseInt(yyyyMMdd.substring(0, 4), 10);
+            const month = parseInt(yyyyMMdd.substring(4, 6), 10) - 1; // JSの月は0から始まるため1を引く
+            const day = parseInt(yyyyMMdd.substring(6, 8), 10);
+            return new Date(year, month, day);
+        },
+
         async getPrevWeek() {
-            var date = new Date(this.display_days[0]);
+            const dateObj = parseYYYYMMDDToDate(this.display_days[0]);
+            var date = new Date(dateObj);
             date.setDate(date.getDate()-7);
             this.getDayList(date);
             this.getReservableList();
         },
 
         async getNextWeek() {
-            var date = new Date(this.display_days[6]);
+            const dateObj = parseYYYYMMDDToDate(this.display_days[0]);
+            var date = new Date(dateObj);
             date.setDate(date.getDate()+1);
             this.getDayList(date);
             this.getReservableList();
@@ -139,7 +171,7 @@ export default {
             const data = {
                 'display_days': this.display_days,
             };
-            const response = await Common.gateway_get(apiurl, data);  // TODO:{2024-02-14:[11:15,11:30,...], 2024-02-15:[]}の形
+            const response = await Common.gateway_get(apiurl, data);  // TODO:{20240214:[11:15,11:30,...], 20240215:[]}の形
             this.reservable_dict = response.data.reservable_dict;
         },
         async postForm() {
@@ -149,8 +181,8 @@ export default {
             var data = {
                 'id': 'test',
                 'lineid': this.lineId,
-                'fullname': document.getElementById('fullname').value,
-                'date': document.getElementById('birthday').value,  // ask:dynamo dateになっている
+                'fullname': document.getElementById('fullname').value,  // TODO:前頁から変数を取得
+                'date': document.getElementById('birthday').value,
                 'address': document.getElementById('tel').value,
                 'gender': document.getElementById('gender').value,
                 'mailaddress': document.getElementById('email').value,
