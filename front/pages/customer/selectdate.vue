@@ -24,16 +24,22 @@
                         <tr>
                             <th>日付</th>
                             <td class="head" v-for="day in display_days">
-                                <div class="date">{{ getDateYYYYMM(day) }}</div>
+                                <div class="date">{{ getDateMMDD(day) }}</div>
                                 <div class="dayofweek">{{ getDayofweek(day) }}</div>
                             </td>
                         </tr>
-                        <tr v-for="times in display_times">
-                            <th>{{ times }}</th>
-                            <tr v-for="day in display_days">
-                                <td v-if="reservable_dict[day].includes(times)">◎</td>
-                                <td v-else>×</td>
-                            </tr>
+                        <tr v-for="time in display_times">
+                            <th>{{ time }}</th>
+                            <td v-for="day in display_days" 
+                                :style="{
+                                    cursor: reservable_dict[day]?.includes(time) ? 'pointer' : 'not-allowed',
+                                    background: selected_datetime?.includes(day)&& selected_datetime?.includes(time) && reservable_dict[day]?.includes(time) ? 
+                                        '#fff3b8' : reservable_dict[day]?.includes(time) ? '#ffffff' : '#d9d9d9'
+                                }"
+                                @click="reservable_dict[day]?.includes(time) ? setSelectedDatetime(day,time) : null">
+                                <p v-if="reservable_dict[day]?.includes(time)">◎</p>
+                                <p v-else>×</p>
+                            </td>
                         </tr>
                     </table>
                 </div>
@@ -45,7 +51,7 @@
 
 <script>
 import axios from 'axios';
-import Common from '@/plugins/common'
+import common from '@/plugins/common'
 
 export default {
     data() {
@@ -53,16 +59,19 @@ export default {
             display_days: "",
             display_times: "",
             reservable_dict: "",  // {20240214:[11:15,11:30,...], 20240215:[]}の形
-            fullname: "",
-            birthday: "",
-            gender: "",
-            tel: "",
-            menu: "",
+            lineId: this.$route.query.lineid,
+            fullname: this.$route.query.fullname,
+            birthday: this.$route.query.birthday,
+            gender: this.$route.query.gender,
+            tel: this.$route.query.tel,
+            serviceId: this.$route.query.service,
+            selected_datetime: "",  // 20240214 11:15の形
         }
     },
     mounted() {
         this.getDayList(new Date());
-        this.getTimeList('11:00', '20:00', 15);
+        this.getTimeList('11:00', '20:00', 15); // 営業時間、予約可能間隔の設定
+        this.getReservableDict();
 
         this.$liffInit
         .then(() => {
@@ -79,7 +88,7 @@ export default {
             const difference = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 日曜日0~土曜6
             const firstDayOfWeek = new Date(date.setDate(date.getDate() + difference));  // 週の最初の日（月曜日）を設定
             
-            const dayList = [];  // 週の日付を格納する配列
+            const dayList = [];  // 週の日付を格納する配列 YYYYMDD形式
             var focus_day = firstDayOfWeek
             for (let i = 0; i < 7; i++) {
                 var focus_day = new Date(firstDayOfWeek.getTime());
@@ -90,15 +99,19 @@ export default {
             this.display_days = dayList;
         },
 
-        async getTimeList(startTime, endTime, interval) {  // NEXT:date型の必要ない
+        async getTimeList(startTime, endTime, interval) {  // NEXT:date型必要ない, 開始終了時間はDBから取得
             let result = [];
             let current = new Date(`2024-01-01 ${startTime}`);
             const end = new Date(`2024-01-01 ${endTime}`);
-            while (current <= end) {
+            while (current < end) {
                 result.push(this.formatTime(current));
                 current = new Date(current.getTime() + interval * 60000); // 分をミリ秒に変換
             }
             this.display_times = result;
+        },
+
+        setSelectedDatetime(day, time) {
+            this.selected_datetime = `${day} ${time}`;
         },
 
         formatTime(date) {
@@ -109,34 +122,16 @@ export default {
             return `${hours}:${minutes}`;
         },
 
-        getDayofweek(date) {
+        getDayofweek(yyyyMMdd) {
+            const dateObj = this.parseYYYYMMDDToDate(yyyyMMdd);
+            var date = new Date(dateObj);
             const dayOfWeek = date.getDay();
-            const dayOfWeekStr = [ "日", "月", "火", "水", "木", "金", "土"][dayOfWeek];
+            const dayOfWeekStr = [ "日", "月", "火", "水", "木", "金", "土"][dayOfWeek];  // dateobjの番号順
             return dayOfWeekStr;
         },
 
-        getTimeIntervals(startTime, endTime, interval) {
-            const result = [];
-            let current = new Date(`2020-01-01 ${startTime}`);
-            const end = new Date(`2020-01-01 ${endTime}`);
-
-            const interval = interval * 60 * 1000;
-
-            while (current.getTime() < end.getTime()) { // 終了時刻を含まないように変更
-                // 時間を"HH:mm"形式で配列に追加
-                const time = `${current.getHours().toString().padStart(2, '0')}:${current.getMinutes().toString().padStart(2, '0')}`;
-                result.push(time);
-
-                // 次の時間に更新
-                current = new Date(current.getTime() + interval);
-            }
-
-            return result;
-}
-
-
-        getDateYYYYMM(yyyyMMdd) {
-            const dateObj = parseYYYYMMDDToDate(yyyyMMdd);
+        getDateMMDD(yyyyMMdd) {
+            const dateObj = this.parseYYYYMMDDToDate(yyyyMMdd);
             var date = new Date(dateObj);
             const month = date.getMonth() + 1;
             const day = date.getDate();
@@ -151,44 +146,43 @@ export default {
         },
 
         async getPrevWeek() {
-            const dateObj = parseYYYYMMDDToDate(this.display_days[0]);
+            const dateObj = this.parseYYYYMMDDToDate(this.display_days[0]);
             var date = new Date(dateObj);
             date.setDate(date.getDate()-7);
             this.getDayList(date);
-            this.getReservableList();
+            this.getReservableDict();
         },
 
         async getNextWeek() {
-            const dateObj = parseYYYYMMDDToDate(this.display_days[0]);
+            const dateObj = this.parseYYYYMMDDToDate(this.display_days[6]);
             var date = new Date(dateObj);
             date.setDate(date.getDate()+1);
             this.getDayList(date);
-            this.getReservableList();
+            this.getReservableDict();
         },
 
-        async getReservableList() {  // TODO
+        async getReservableDict() {  // 初日のみを投げる
             const apiurl = "https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservableList";
             const data = {
-                'display_days': this.display_days,
+                "display_first_day": this.display_days[0],
             };
-            const response = await Common.gateway_get(apiurl, data);  // TODO:{20240214:[11:15,11:30,...], 20240215:[]}の形
-            this.reservable_dict = response.data.reservable_dict;
+            const response = await common.gateway_get(apiurl, data);  // {20240214:[11:15,11:30,...], 20240215:[]}の形
+            this.reservable_dict = response.reservable_dict;
         },
         async postForm() {
-            await this.getUserInfo();
-            console.log("getUserInfo completed");
-            var apiurl = "https://4om5vxifil.execute-api.ap-northeast-1.amazonaws.com/rakujimu-1/RegistCustomerMst";
+            // ReservationListに送信
+            var apiurl = "https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList";
             var data = {
-                'id': 'test',
-                'lineid': this.lineId,
-                'fullname': document.getElementById('fullname').value,  // TODO:前頁から変数を取得
-                'date': document.getElementById('birthday').value,
-                'address': document.getElementById('tel').value,
-                'gender': document.getElementById('gender').value,
-                'mailaddress': document.getElementById('email').value,
+                "lineId": this.lineId,
+                "fullname": this.fullname,
+                "birthday": this.birthday,
+                "gender": this.gender,
+                "tel": this.tel,
+                "serviceId": this.service,
+                "supply_datetime": this.selected_datetime,   //"20240214 11:15"の形
             };
             console.log("data completed");
-            Common.gateway_post(apiurl, data);
+            common.gateway_post(apiurl, data);
         },
     },
     // templateの選択
