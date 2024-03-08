@@ -4,21 +4,27 @@ export default {
         console.log(`LOG: ${message}`)
     },
 
-    async gateway_get(apiurl){
-        try {
-            const response = await axios.get(apiurl);
-            return response.data;
-        } catch (error) {
-            alert("Error: " + error);
+    async gateway_get(apiurl, data){
+        if (data) {
+            try {
+                const response = await axios.get(apiurl,{params:{data}});
+                console.log(response);
+                return response.data;
+            } catch (error) {
+                alert("Error: " + error);
+            }
+        }else{
+            try {
+                const response = await axios.get(apiurl);
+                return response.data;
+            } catch (error) {
+                alert("Error: " + error);
+            }
         }
     },
     async gateway_post(apiurl, data){
-        var jsonData = JSON.stringify(data);
-        var headers =  {
-            headers: {'Content-Type': 'application/json'}
-        };
         try {
-            const response = await axios.post(apiurl, jsonData, headers);
+            const response = await axios.post(apiurl, {params:{data}});
             console.log(response);
             return response.data;
         } catch (error) {
