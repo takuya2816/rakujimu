@@ -34,9 +34,9 @@
         <input type="tel" id="tel" v-model="tel" />
       </div>
       <div class="form-group">
-        <label for="menu">■メニュー</label>
-        <select id="menu" name="menu" required>
-          <option v-for="item in menulist" :key="item.id" :value="item.name">
+        <label for="service">■メニュー</label>
+        <select id="service" name="service" required>
+          <option v-for="item in servicelist" :key="item.id" :value="item.name">
             {{ item.name }}
           </option>
         </select>
@@ -53,12 +53,12 @@ import Common from '@/plugins/common'
 export default {
   data() {
     return {
-      menulist: [],
+      servicelist: [],
       fullname: '',
       birthday: '',
       gender: '',
       tel: '',
-      menu: '',
+      service: '',
     }
   },
   mounted() {
@@ -71,7 +71,7 @@ export default {
     //     this.liffError = error
     //   })
 
-    this.getMenuList()
+    this.getServiceList()
   },
 
   methods: {
@@ -106,15 +106,23 @@ export default {
         await this.getUserProfile(accessToken)
       }
     },
-    async getMenuList() {
-      // TODO: メニューリストを取得
+    async getServiceList() {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetServiceMst'
       const res = await Common.gateway_get(apiurl)
-      this.menulist = res.Items
+      this.servicelist = res.Items
     },
     reserve() {
-      this.$router.push('/customer/selectdate')
+      this.$router.push({path: '/customer/selectdate', 
+                         query: {
+                              lineId: this.lineId,
+                              fullname: this.fullname,
+                              birthday: this.birthday,
+                              gender: this.gender,
+                              tel: this.tel,
+                              service: this.service,
+                          }
+                        })
     },
   },
   // templateの選択
