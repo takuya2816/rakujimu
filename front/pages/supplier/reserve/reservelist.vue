@@ -16,25 +16,33 @@
         <td>2023/11/27 14:00~15:00</td>
         <td>鶴田悠也</td>
         <td>カット</td>
-        <td>確定</td>
+        <td>
+          <button class="supplier-send" @click="reservedetail">確定</button>
+        </td>
       </tr>
       <tr>
         <td>2023/11/27 16:00~17:00</td>
         <td>山田太郎</td>
         <td>カット</td>
-        <td>確定</td>
+        <td>
+          <button class="supplier-send" @click="reservedetail">確定</button>
+        </td>
       </tr>
       <tr>
         <td>2023/11/28 10:00~12:00</td>
         <td>山田花子</td>
         <td>パーマ</td>
-        <td>確定</td>
+        <td>
+          <button class="supplier-send" @click="reservedetail">確定</button>
+        </td>
       </tr>
       <tr>
         <td>2023/11/29 14:00~15:00</td>
         <td>XXX</td>
         <td>ストレート・パーマ</td>
-        <td>確定</td>
+        <td>
+          <button class="supplier-send" @click="reservedetail">未確定</button>
+        </td>
       </tr>
     </table>
   </div>
@@ -55,18 +63,19 @@ export default {
     }
   },
   mounted() {
-    this.$liffInit
-      .then(() => {
-        pass
-      })
-      .catch((error) => {
-        this.liffError = error
-      })
+    // 開発のためliffコメントアウト
+    // this.$liffInit
+    //   .then(() => {
+    //     pass
+    //   })
+    //   .catch((error) => {
+    //     this.liffError = error
+    //   })
   },
 
   methods: {
-    reserve() {
-      this.$router.push('/reserving')
+    reservedetail() {
+      this.$router.push('/supplier/reserve/reservedetail')
     },
     async getMenuList() {
       // ユーザのaccesstokenを取得

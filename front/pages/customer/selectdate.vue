@@ -64,13 +64,14 @@ export default {
         this.getDayList(new Date());
         this.getTimeList('11:00', '20:00', 15);
 
-        this.$liffInit
-        .then(() => {
-            pass
-        })
-        .catch((error) => {
-            this.liffError = error;
-        });
+        // 開発のためliffコメントアウト
+        // this.$liffInit
+        // .then(() => {
+        //     pass
+        // })
+        // .catch((error) => {
+        //     this.liffError = error;
+        // });
     },
 
     methods: {
