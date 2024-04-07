@@ -17,23 +17,21 @@ export default {
       { name: 'format-detection', content: 'telephone=no' },
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', 
-        href: '/favicon.ico', href:'/fonts.googleapis.com/css?family=Anonymous+Pro',
-        href:"https://fonts.googleapis.com/css2?family=MuseoModerno:wght@200&display=swap",
-      }
+      {
+        rel: 'icon',
+        type: 'image/x-icon',
+        href: '/favicon.ico',
+        href: '/fonts.googleapis.com/css?family=Anonymous+Pro',
+        href: 'https://fonts.googleapis.com/css2?family=MuseoModerno:wght@200&display=swap',
+      },
     ],
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
-  css: [
-    '~/styles/style.css',
-  ],
+  css: ['~/styles/style.css'],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: [
-    '~/plugins/liff-init.client.js',
-    '~/plugins/common.js',
-  ],
+  plugins: ['~/plugins/liff-init.client.js', '~/plugins/common.js'],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -48,6 +46,7 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
+    'bootstrap-vue/nuxt',
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios

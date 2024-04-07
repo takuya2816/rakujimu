@@ -62,6 +62,7 @@ export default {
     }
   },
   mounted() {
+    // 開発のためliffコメントアウト
     this.$liffInit
       .then(() => {
         this.idToken = liff.getIDToken();
