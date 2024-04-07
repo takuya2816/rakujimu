@@ -94,3 +94,5 @@ sw.*
 .prettierignore
 .prettierrc
 jest.config.js
+
+.venv

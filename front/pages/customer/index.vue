@@ -64,7 +64,8 @@ export default {
   mounted() {
     this.$liffInit
       .then(() => {
-        pass
+        this.idToken = liff.getIDToken();
+        // this.accessToken = liff.getAccessToken();
       })
       .catch((error) => {
         this.liffError = error
@@ -74,37 +75,6 @@ export default {
   },
 
   methods: {
-    async getAccessToken() {
-      // ユーザのaccesstokenを取得
-      try {
-        const accessToken = liff.getAccessToken()
-        return accessToken
-      } catch (error) {
-        console.error(error)
-        return null
-      }
-    },
-    async getUserProfile(accessToken) {
-      // ユーザ情報を取得
-      try {
-        const response = await axios.get(`https://api.line.me/v2/profile`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        })
-        this.lineId = response.data.userId // 各種を更新
-        this.displayName = response.data.displayName
-        this.pictureUrl = response.data.pictureUrl
-      } catch (error) {
-        console.error(error)
-      }
-    },
-    async getUserInfo() {
-      const accessToken = await this.getAccessToken()
-      if (accessToken) {
-        await this.getUserProfile(accessToken)
-      }
-    },
     async getServiceList() {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetServiceMst'
@@ -112,14 +82,14 @@ export default {
       this.servicelist = res.Items
     },
     reserve() {
-      this.$router.push({path: '/customer/selectdate', 
+      this.$router.push({path: '/customer/selectdate/', 
                          query: {
-                              lineId: this.lineId,
+                              accessToken: this.accessToken,
                               fullname: this.fullname,
                               birthday: this.birthday,
                               gender: this.gender,
                               tel: this.tel,
-                              service: this.service,
+                              service: this.service
                           }
                         })
     },
