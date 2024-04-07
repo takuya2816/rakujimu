@@ -62,18 +62,14 @@ export default {
     }
   },
   mounted() {
-<<<<<<< HEAD
     // 開発のためliffコメントアウト
-=======
-    //開発のためLIFFコメントアウト
->>>>>>> master
-    // this.$liffInit
-    //   .then(() => {
-    //     pass
-    //   })
-    //   .catch((error) => {
-    //     this.liffError = error
-    //   })
+    this.$liffInit
+      .then(() => {
+        pass
+      })
+      .catch((error) => {
+        this.liffError = error
+      })
 
     this.getServiceList()
   },
@@ -117,16 +113,17 @@ export default {
       this.servicelist = res.Items
     },
     reserve() {
-      this.$router.push({path: '/customer/selectdate', 
-                         query: {
-                              lineId: this.lineId,
-                              fullname: this.fullname,
-                              birthday: this.birthday,
-                              gender: this.gender,
-                              tel: this.tel,
-                              service: this.service,
-                          }
-                        })
+      this.$router.push({
+        path: '/customer/selectdate',
+        query: {
+          lineId: this.lineId,
+          fullname: this.fullname,
+          birthday: this.birthday,
+          gender: this.gender,
+          tel: this.tel,
+          service: this.service,
+        },
+      })
     },
   },
   // templateの選択

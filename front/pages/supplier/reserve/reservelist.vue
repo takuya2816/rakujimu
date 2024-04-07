@@ -64,13 +64,13 @@ export default {
   },
   mounted() {
     // 開発のためliffコメントアウト
-    // this.$liffInit
-    //   .then(() => {
-    //     pass
-    //   })
-    //   .catch((error) => {
-    //     this.liffError = error
-    //   })
+    this.$liffInit
+      .then(() => {
+        pass
+      })
+      .catch((error) => {
+        this.liffError = error
+      })
   },
 
   methods: {
