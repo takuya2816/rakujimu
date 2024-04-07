@@ -9,7 +9,6 @@
 
 <script>
 // LINEIDから顧客・提供者振り分けて各トップ画面へリダイレクト
-import axios from 'axios'
 export default {
   methods: {
     customer() {

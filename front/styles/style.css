@@ -68,6 +68,16 @@
   font-size: 10pix;
 }
 
+.supplier-send {
+  background-color: #a19e9e;
+  border-radius: 5px;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  width: 80%;
+}
+
 .title {
   display: block;
   padding: 10% 0 0 0;

@@ -1,5 +1,4 @@
 <!-- 提供側のトップ画面 -->
-<!-- 顧客一覧、予約一覧へのリンクを含めたボタンの設置 -->
 <template>
   <div>
     <button
@@ -18,7 +17,6 @@
     </button>
   </div>
 </template>
-
 <script>
 // import Common from '@/plugins/common'
 
@@ -34,13 +32,13 @@ export default {
   },
   mounted() {
     // 開発のためLIFFコメントアウト
-    // this.$liffInit
-    //   .then(() => {
-    //     pass
-    //   })
-    //   .catch((error) => {
-    //     this.liffError = error
-    //   })
+    this.$liffInit
+      .then(() => {
+        pass
+      })
+      .catch((error) => {
+        this.liffError = error
+      })
   },
 
   methods: {

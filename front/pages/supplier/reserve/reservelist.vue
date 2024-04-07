@@ -1,4 +1,4 @@
-<!-- 提供側のトップ画面 -->
+<!-- 予約詳細画面 -->
 <!-- 顧客一覧、予約一覧へのリンクを含めたボタンの設置 -->
 <template>
   <div>
@@ -7,46 +7,42 @@
     </div>
     <table class="supplier-rsv">
       <tr>
-        <th></th>
-        <th>申込時間</th>
         <th>氏名</th>
-        <th>内容</th>
-        <th>予約日時</th>
-        <th>承認</th>
+        <th>種別</th>
+        <th>予約時間帯</th>
+        <th>状況</th>
       </tr>
       <tr>
-        <td>
-          <button
-            type="button"
-            class="btn btn-outline-secondary"
-            @click="reserve_detail"
-          >
-            詳細
-          </button>
-        </td>
-        <td>2023/11/25 14:00</td>
+        <td>2023/11/27 14:00~15:00</td>
         <td>鶴田悠也</td>
         <td>カット</td>
-        <td>2023/11/27 14:00~15:00</td>
-        <td>確定</td>
-      </tr>
-      <tr>
         <td>
-          <button type="button" class="btn btn-outline-secondary">詳細</button>
+          <button class="supplier-send" @click="reservedetail">確定</button>
         </td>
-        <td>2023/11/25 14:00</td>
-        <td>山田太郎</td>
-        <td>パーマ</td>
-        <td>2023/11/27 16:00~17:00</td>
-        <td>確定</td>
       </tr>
       <tr>
-        <td><button class="btn-details">詳細</button></td>
-        <td>2023/11/25 14:00</td>
+        <td>2023/11/27 16:00~17:00</td>
+        <td>山田太郎</td>
+        <td>カット</td>
+        <td>
+          <button class="supplier-send" @click="reservedetail">確定</button>
+        </td>
+      </tr>
+      <tr>
+        <td>2023/11/28 10:00~12:00</td>
+        <td>山田花子</td>
+        <td>パーマ</td>
+        <td>
+          <button class="supplier-send" @click="reservedetail">確定</button>
+        </td>
+      </tr>
+      <tr>
+        <td>2023/11/29 14:00~15:00</td>
         <td>XXX</td>
         <td>ストレート・パーマ</td>
-        <td>2023/11/29 14:00~15:00</td>
-        <td>未承認</td>
+        <td>
+          <button class="supplier-send" @click="reservedetail">未確定</button>
+        </td>
       </tr>
     </table>
   </div>
@@ -67,19 +63,19 @@ export default {
     }
   },
   mounted() {
-    //開発のためLIFFコメントアウト
-    // this.$liffInit
-    //   .then(() => {
-    //     pass
-    //   })
-    //   .catch((error) => {
-    //     this.liffError = error
-    //   })
+    // 開発のためliffコメントアウト
+    this.$liffInit
+      .then(() => {
+        pass
+      })
+      .catch((error) => {
+        this.liffError = error
+      })
   },
 
   methods: {
-    reserve() {
-      this.$router.push('/reserving')
+    reservedetail() {
+      this.$router.push('/supplier/reserve/reservedetail')
     },
     async getMenuList() {
       // ユーザのaccesstokenを取得
@@ -151,10 +147,6 @@ export default {
       } catch (error) {
         alert(error)
       }
-    },
-
-    reserve_detail() {
-      this.$router.push('/supplier/reserve/reservedetail')
     },
   },
   // templateの選択
