@@ -21,7 +21,7 @@ dynamodb = boto3.resource('dynamodb')
 # ログ出力の設定
 logger = logging.getLogger()
 
-# 共通変数 Todo:リファクタリング
+# 共通変数 #Todo:リファクタリング
 
 API_USER_ID_URL = 'https://api.line.me/oauth2/v2.1/verify'
 
@@ -39,7 +39,7 @@ def get_next_seq(table, tablename):
     )
     return response['Attributes']['seq']
 
-# 共通関数
+# 共通関数 #Todo：エラー発生中。要テスト（20240414）
 def get_profile(id_token, channel_id):
     """
     プッシュメッセージ送信処理
@@ -110,7 +110,7 @@ def lambda_handler(event, context):
         # 現在の時刻を取得
         nowtime = time.time()
         timestamp = datetime.datetime.fromtimestamp(nowtime)
-        # CustomerMst テーブルに登録する
+        # 初顧客の場合はCustomerMst テーブルに登録する #Todo（20240414）
         table = dynamodb.Table('ReservationList')
         table.put_item(
             Item = {

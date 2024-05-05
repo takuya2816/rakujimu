@@ -52,7 +52,7 @@ def get_reserved_list(display_days, time_iter):  # ->{"20240130": ["11:00","12:0
     table = dynamodb.Table('ReservationList')
     response = table.scan()
     
-    # TODO:対象の範囲の予約済データを15分毎の単位で取得
+    # TODO:対象の範囲の予約済データを15分毎の単位で取得（20240414）
     for display_day in display_days:
         reserved_dict[display_day] = ["11:00","12:00"]  # test
     return reserved_dict
