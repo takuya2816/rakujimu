@@ -82,7 +82,7 @@ def get_available_slots(reservable_dict, service_term): # {"20240130": ["11:00",
     for date, slots in reservable_dict.items():
         available_slots[date] = []
         for i, slot in enumerate(slots): 
-            slot_time = datetime.strptime(date + " " + slot, "%Y%m%d %H:%M")  # 日付と時間を合わせる
+            slot_time = datetime.datetime.strptime(date + " " + slot, "%Y%m%d %H:%M")  # 日付と時間を合わせる
             
             # slot_timeに15分ずつ足していき、slotsに該当する時間があるか判定、service_term%15-1回の判定が完了したらavailable_slotsへappend
             is_available = True
