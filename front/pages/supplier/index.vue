@@ -22,7 +22,7 @@
 
 export default {
   // css: [
-  //     '~/styles/reserve.css',
+  //     '~/styles/supplier.css',
   // ],
   data() {
     return {
@@ -32,21 +32,21 @@ export default {
   },
   mounted() {
     // 開発のためLIFFコメントアウト
-    this.$liffInit
-      .then(() => {
-        pass
-      })
-      .catch((error) => {
-        this.liffError = error
-      })
+    // this.$liffInit
+    //   .then(() => {
+    //     pass
+    //   })
+    //   .catch((error) => {
+    //     this.liffError = error
+    //   })
   },
 
   methods: {
     GetCustomerList() {
-      this.$router.push('/customerlist')
+      this.$router.push('/supplier/customerInfo')
     },
     GetReserveList() {
-      this.$router.push('/reservelist')
+      this.$router.push('/supplier/reservedInfo')
     },
   },
   // templateの選択
