@@ -5,7 +5,7 @@
       <h1>Contact</h1>
       <h3>予約フォーム</h3>
     </div>
-    <div class="message">
+    <div class="message-under-title">
       <p>
         XXXXXXの予約申込を行います<br />
         予約確定後に、店舗からご連絡申し上げます<br />
@@ -63,14 +63,14 @@ export default {
   },
   mounted() {
     // 開発のためliffコメントアウト
-    this.$liffInit
-      .then(() => {
-        this.idToken = liff.getIDToken();
-        // this.accessToken = liff.getAccessToken();
-      })
-      .catch((error) => {
-        this.liffError = error
-      })
+    // this.$liffInit
+    //   .then(() => {
+    //     this.idToken = liff.getIDToken();
+    //     // this.accessToken = liff.getAccessToken();
+    //   })
+    //   .catch((error) => {
+    //     this.liffError = error
+    //   })
 
     this.getServiceList()
   },
@@ -99,3 +99,10 @@ export default {
   layout: 'customer',
 }
 </script>
+
+<style>
+.form-group {
+  margin-bottom: 10px;
+}
+</style>
+

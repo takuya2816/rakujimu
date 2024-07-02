@@ -5,7 +5,7 @@
       <h1>Contact</h1>
       <h3>予約フォーム</h3>
     </div>
-    <div class="message">
+    <div class="message-under-title">
       <p>
         指定の日時を選択してください<br />
         ◎：予約可能　✖：予約不可<br />
@@ -86,23 +86,15 @@ export default {
     this.getDayList(new Date())
     this.getTimeList('11:00', '20:00', 15)
     //開発のためLIFFコメントアウト
-    this.$liffInit
-      .then(() => {
-        pass
-      })
-      .catch((error) => {
-        this.liffError = error
-      })
+    // this.$liffInit
+    //   .then(() => {
+    //     pass
+    //   })
+    //   .catch((error) => {
+    //     this.liffError = error
+    //   })
     this.getTimeList('11:00', '20:00', 15) // 営業時間、予約可能間隔の設定
     this.getReservableDict()
-
-    this.$liffInit
-      .then(() => {
-        pass
-      })
-      .catch((error) => {
-        this.liffError = error
-      })
   },
 
   methods: {
@@ -220,3 +212,66 @@ export default {
   layout: 'customer',
 }
 </script>
+
+<style>
+.week-move {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+.prev　.next {
+  color: #a19e9e;
+  margin: 5px 0;
+  border: none;
+  cursor: pointer;
+  width: 15%;
+}
+table.customer-rsv {
+  border-collapse: separate;
+  border-spacing: 3px;
+  width: 100%;
+}
+
+.customer-rsv th,
+.customer-rsv td {
+  border-radius: 5px;
+  text-align: center;
+  padding: 3px 0;
+}
+
+.customer-rsv td.head {
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
+}
+
+.customer-rsv th {
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
+  border: solid 1px #000000;
+  width: 14%;
+}
+
+.customer-rsv td {
+  background-color: #d9d9d9;
+  border: solid 1px #636363;
+  width: 10%;
+}
+table.supplier-rsv {
+  font-size: 13px;
+  border-collapse: separate;
+  margin: 5px auto;
+  text-align: center;
+  border-spacing: 0px 8px;
+  width: 100%;
+}
+.supplier-rsv td {
+  background-color: #ffffff;
+  border-top: solid 2px #ffffff;
+  border-bottom: solid 2px #ffffff;
+}
+.supplier-rsv th,
+.supplier-rsv td {
+  padding: 2%;
+  width: 10%;
+}
+</style>
