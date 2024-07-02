@@ -64,7 +64,6 @@ def get_reserved_list(display_days, time_iter):  # ->{"20240130": ["11:00","12:0
     
     # 対象の範囲の予約済データを15分毎の単位で取得
     reserved_datetime_list = response['Item']
-    # TODO:{id, "supply_date", "supply_sttime", "supply_endtime"} 要テーブルカラム変更
     times_list = []
     for display_day in display_days:  # Mon~Sunで繰り返し
         target_dayofweek:str = datetime.datetime.strptime(display_day, '%Y%m%d').strftime('%A')
@@ -76,15 +75,28 @@ def get_reserved_list(display_days, time_iter):  # ->{"20240130": ["11:00","12:0
         reserved_dict[display_day] = times_list
     return reserved_dict
 
-# TODO:予約可能な時間でサービス提供時間分の時間が空いている箇所を計算
-def get_available_slots(reservable_dict, service_term):
+# 予約可能な時間でサービス提供時間分の時間が空いている箇所を計算
+def get_available_slots(reservable_dict, service_term): # {"20240130": ["11:00","11:15"],...}, "00:30" ->{"20240130": ["11:00",],...}
     available_slots = {}
+    service_minutes = int(service_term.split(':')[0]) * 60 + int(service_term.split(':')[1])
     for date, slots in reservable_dict.items():
         available_slots[date] = []
         for i, slot in enumerate(slots): 
             slot_time = datetime.strptime(date + " " + slot, "%Y%m%d %H:%M")  # 日付と時間を合わせる
-            for j in service_term%15-1: 
+            
             # slot_timeに15分ずつ足していき、slotsに該当する時間があるか判定、service_term%15-1回の判定が完了したらavailable_slotsへappend
+            is_available = True
+            for j in range(1, service_minutes // 15):
+                check_time = slot_time + timedelta(minutes=15 * j)
+                check_time_str = check_time.strftime("%H:%M")
+                if check_time_str not in slots:
+                    is_available = False
+                    break
+
+            # 利用可能な場合、スロットを追加
+            if is_available:
+                available_slots[date].append(slot)
+
     return available_slots
     
 def lambda_handler(event, context):
