@@ -29,8 +29,8 @@
     </div>
     <div>
       <div class="buttons">
-        <button @click="editReservation" class="edit-button">編集</button>
-        <button @click="approveReservationInfo" class="post-button">承認</button>
+        <button @click="editReservationInfo" class="edit-button">編集</button>
+        <button @click="approveReservation" class="post-button">承認</button>
       </div>
     </div>
   </div>
@@ -69,8 +69,7 @@ export default {
     
     editReservationInfo() {
       // 編集ボタンが押されたときの処理
-      // TODO:予約IDを含めるreservationを次ページに渡す
-      print()
+      this.$router.push(`/supplier/reservedInfo/detail/${this.$route.params.id}/edit`)
     },
   },
   filters: {
