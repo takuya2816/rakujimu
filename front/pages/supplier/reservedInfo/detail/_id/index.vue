@@ -94,7 +94,6 @@ export default {
 .details {
   margin-bottom: 20px;
 }
-
 .detail-item {
   display: flex;
   justify-content: space-between;
