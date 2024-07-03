@@ -11,11 +11,30 @@ class DecimalEncoder(json.JSONEncoder):
             return int(obj)
         return json.JSONEncoder.default(self, obj)
     
+def get_record_by_id(data, record_id):
+    # Itemsリストを取得
+    items = data.get('Items', [])
+    
+    # 指定されたIDを持つレコードを検索
+    for item in items:
+        if int(item.get('id')) == int(record_id):
+            return item
+    
+    # 指定されたIDを持つレコードが見つからない場合、Noneを返す
+    return None
+
 def lambda_handler(event, context):
     try:
         # CustomerMst テーブルから全データを参照する。
         table = dynamodb.Table('CustomerMst')
-        response = table.scan()
+        customerList = table.scan()
+
+        # レスポンスデータの内、customerIdに値がある場合絞り込みを行う
+        data = event.get('queryStringParameters')
+        if data:
+            parsed_data = json.loads(data['data'])
+            customerId = parsed_data.get('customerId', False)
+            customerList = get_record_by_id(customerList, customerId)
         
         # 結果を返す
         return {
@@ -27,7 +46,7 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Methods': 'GET',
                 'Access-Control-Allow-Origin': '*'
             },
-            "body": json.dumps(response, cls=DecimalEncoder)
+            "body": json.dumps(customerList, cls=DecimalEncoder)
         }
         
     except:

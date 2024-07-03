@@ -11,19 +11,19 @@
         <div class="profile-info">
           <div class="detail-item">
             <span class="label">氏名</span>
-            <span class="value">{{ customerInfo.name }}</span>
+            <span class="value">{{ customer.name }}</span>
           </div>
           <div class="detail-item">
             <span class="label">性別</span>
-            <span class="value">{{ customerInfo.gender }}</span>
+            <span class="value">{{ customer.gender }}</span>
           </div>
           <div class="detail-item">
             <span class="label">生年月日</span>
-            <span class="value">{{ customerInfo.birthdate }}</span>
+            <span class="value">{{ customer.birthday }}</span>
           </div>
           <div class="detail-item">
-            <span class="label">住所</span>
-            <span class="value">{{ customerInfo.address }}</span>
+            <span class="label">電話</span>
+            <span class="value">{{ customer.tel }}</span>
           </div>
         </div>
       </div>
@@ -38,12 +38,12 @@
       <div class="list-body">
         <div class="list-content">
           <div v-for="reservation in reservationList" :key="reservation.id" class="list-record">
-            <a :href="`/customer/${reservation.id}`" class="reservation-link">
+            <a :href="`/supplier/customer/reservedInfo/detail/${reservation.id}`" class="reservation-link">
               <div class="list-info">
-                <div class="list-item">{{ reservation.applicationDate }}<br>{{ reservation.applicationTime }}</div>
-                <div class="list-item">{{ reservation.startDate }}<br>{{ reservation.startTime }}</div>
-                <div class="list-item">{{ reservation.name }}</div>
-                <div class="list-item">{{ reservation.menu }}</div>
+                <div class="list-item">{{ reservation.regist_date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
+                <div class="list-item">{{ reservation.supply_date }}<br>{{ reservation.supply_sttime | hhmmss2hhmm }}</div>
+                <div class="list-item">{{ reservation.customer_name }}</div>
+                <div class="list-item">{{ reservation.service_name }}</div>
               </div>
             </a>
           </div>
@@ -62,37 +62,52 @@ import common from '@/plugins/common'
 export default {
   data() {
     return {
-      customerInfo:{},
+      customer:{},
       reservationList:[]
     }
   },
   mounted() {
-    this.getCustomerInfo(this.$route.params.id)
+    this.getCustomerMst(this.$route.params.id)
+    this.getReservationList(this.$route.params.id)
   },
   methods: {
-    async getCustomerInfo(customer_id) {
+    async getCustomerMst(customerId) {
       const apiurl =
-        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationInfo'
-      const res = await common.gateway_get(apiurl, customer_id)
-      this.customer_info = res.Items  // TODO:変数の中身を確認して、for文を修正する
+        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
+      const data = {customerId: customerId}
+      const res = await common.gateway_get(apiurl, data)
+      this.customer = res
     },
 
-    async getCustomerReservationList(customer_id) {
+    async getReservationList(customerId) {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-      const data = {
-        customer_id: customer_id,
-      }
-      const res = await common.gateway_get(apiurl, data)
-      this.reservationList = res.Items
+      const data = {customerId: customerId}
+      // const res = await common.gateway_get(apiurl, data)  # TODO:customerIdで絞り込み
+      const res = await common.gateway_get(apiurl)
+      this.reservationList = res
     },
 
-    async editCustomerInfo(customer_id) {
+    async editCustomerInfo(customerId) {
       // 承認ボタンが押されたときの処理
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistXXX'
-      const res = await Common.gateway_post(apiurl, customer_id)
+      const res = await common.gateway_post(apiurl, customerId)
     },
+  },
+  filters: {
+    datetime2hhmm(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    },
+    hhmmss2hhmm(value) {
+      if (!value) return '';
+      const [hours, minutes] = value.split(':');
+      return `${hours}:${minutes}`;
+    }
   },
   layout: 'supplier',
 }
@@ -105,12 +120,17 @@ export default {
 .detail-item {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 20px; /* 項目ごとの間隔を広げる */
 }
 .detail-item .label {
   color: #999;
+  flex-basis: 40%;
+  text-align: right; /* 右揃えにする */
+  margin-right: 20px;
 }
 .detail-item .value {
   color: #333;
+  flex-basis: 60%;
+  text-align: left;
 }
 </style>

@@ -48,12 +48,11 @@ def lambda_handler(event, context):
                     break
 
         # パラメータを取得
-        data = event.get('queryStringParameters')
-        parsed_data = json.loads(data['data'])
-        reservationId = parsed_data.get('reservationId', False)
-
-        # レスポンスデータの内、reservationIdに値がある場合絞り込みを行う
-        if reservationId:
+        data = event.get('queryStringParameters', False)
+        if data:
+            # レスポンスデータの内、reservationIdに値がある場合絞り込みを行う
+            parsed_data = json.loads(data['data'])
+            reservationId = parsed_data.get('reservationId')
             reservationList = get_record_by_id(reservationList, reservationId)
             print(reservationList)
 

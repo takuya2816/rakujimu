@@ -8,12 +8,12 @@
       <div class="list-header-item">氏名</div>
       <div class="list-header-item">性別</div>
       <div class="list-header-item">最終来店日</div>
-      <div class="list-header-item">来店の予定</div>
+      <div class="list-header-item">次の予約</div>
     </div>
     <div class="list-body">
       <div class="list-content">
-        <div v-for="customer in customerList" :key="customer.id" class="list-record">
-          <a :href="`/customer/${customer.id}`" class="customer-link">
+        <div v-for="customer in customerMst" :key="customer.id" class="list-record">
+          <a :href="`/supplier/customerInfo/detail/${customer.id}`" class="customer-link">
             <div class="list-info">
               <div class="list-item">{{ customer.name }}</div>
               <div class="list-item">{{ customer.gender }}</div>
@@ -53,6 +53,14 @@ export default {
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
       const res = await common.gateway_get(apiurl)
       this.customerMst = res.Items
+      console.log(this.customerMst)
+    },
+    async getUserReservationList(){
+      const apiurl =
+        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetUserReservationList'
+      const res = await common.gateway_get(apiurl)
+      this.customerMst = res.Items
+      console.log(this.customerMst)
     }
   },
   layout: 'supplier',
