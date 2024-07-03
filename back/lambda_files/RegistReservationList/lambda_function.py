@@ -69,6 +69,48 @@ def get_profile(id_token, channel_id):
     res_body = json.loads(response.text)
     return res_body
 
+# line_idが一致するアイテムが存在しない場合は新しい顧客として登録
+def regist_customer(lineid, seqtable):
+    new_customer_flag = False
+    table = dynamodb.Table('CustomerMst')
+
+    # line_idが一致するアイテムをスキャン
+    response = table.scan(
+        FilterExpression=Attr('line_id').eq(lineid)
+    )
+    items = response.get('Items', [])
+    existing_item = items[0] if items else None
+
+    # アイテムが存在しない場合、新しい顧客として登録
+    if not existing_item:
+        new_customer_flag = True
+        nextseq = get_next_seq(seqtable, 'CustomerMst')
+
+        # 現在の日時を取得
+        current_datetime = datetime.now().isoformat()
+
+        # 新しい顧客情報
+        customer_data = {
+            'id': nextseq,
+            'name': "",
+            'reserve_date': current_datetime,
+            'line_id': lineid,
+            'comment': ""
+        }
+
+        # API GatewayのエンドポイントURL
+        api_url = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistCustomerMst'
+
+        # APIリクエストを送信して顧客情報を登録
+        response = requests.post(api_url, json=customer_data)
+
+        # レスポンスのステータスコードを確認
+        if response.status_code != 200:
+            print(f"Error registering customer: {response.text}")
+            new_customer_flag = False
+            
+    return new_customer_flag
+
 def lambda_handler(event, context):
     try:
         # パラメータログ、チェック
@@ -112,19 +154,52 @@ def lambda_handler(event, context):
         timestamp = datetime.datetime.fromtimestamp(nowtime)
         # 初顧客の場合はCustomerMst テーブルに登録する #Todo（20240414）
         table = dynamodb.Table('ReservationList')
-        table.put_item(
-            Item = {
-                'id' : nextseq,
-                'resist_reserve_date' : resist_reserve_date,
-                'reserve_date' : datetime,
-                'line_id' : lineid,
-                'employee_id' : employee,
-                'service_id' : serviceid,
-                'approval_flag' : 'false',
-                'memo' : memo,
-                'update_datetime' : str(timestamp)
-            }
+
+        # line_idとdatetimeで既存の予約を検索
+        response = table.scan(
+            FilterExpression=Attr('line_id').eq(lineid) & Attr('reserve_date').eq(datetime)
         )
+
+        existing_item = response.get('Items', [])[0] if response.get('Items') else None
+
+        if existing_item:
+            # 既存の予約を更新
+            response = table.update_item(
+                Key={
+                    'id': existing_item['id']
+                },
+                UpdateExpression="set resist_datetime = :rrd, reserve_date = :rd, employee_id = :e, service_id = :s, approval_flag = :af, memo = :m, update_datetime = :u",
+                ExpressionAttributeValues={
+                    ':rdt': resistdatetime,
+                    ':rd': reservedate,
+                    ':e': "",
+                    ':s': serviceid,
+                    ':af': approvalflag,
+                    ':m': memo,
+                    ':u': timestamp
+                },
+                ReturnValues="UPDATED_NEW"
+            )
+        else:
+            # lineidがCustomerMstテーブルに登録されていない場合は登録
+            regist_customer(lineid, seqtable)
+            
+            # 新しい予約を作成
+            seqtable = dynamodb.Table('sequence')
+            nextseq = get_next_seq(seqtable, 'ReservationList')
+            table.put_item(
+                Item = {
+                    'id' : nextseq,
+                    'resist_datetime' : resistdatetime,
+                    'reserve_date' : reservedate,
+                    'line_id' : lineid,
+                    'employee_id' : employee,
+                    'service_id' : serviceid,
+                    'approval_flag' : 'false',
+                    'memo' : memo,
+                    'update_datetime' : str(timestamp)
+                }
+            )
         
         # 結果を返す
         return {
