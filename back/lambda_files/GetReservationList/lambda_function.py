@@ -13,9 +13,41 @@ class DecimalEncoder(json.JSONEncoder):
     
 def lambda_handler(event, context):
     try:
-        # CustomerMst テーブルから全データを参照する。
+        # ReservationList テーブルから全データを参照する。
         table = dynamodb.Table('ReservationList')
-        response = table.scan()
+        reservationList = table.scan()
+
+        # CustomerMst, ServiceMst テーブルからデータを参照する
+        table = dynamodb.Table('CustomerMst')
+        customerMst = table.scan()
+        table = dynamodb.Table('ServiceMst')
+        serviceMst = table.scan()
+
+        # CustomerMst, ServiceMst テーブルのを付与
+        for reservation in reservationList['Items']:
+            for customer in customerMst['Items']:
+                if reservation['customer_id'] == customer['customerId']:
+                    reservation['customer_name'] = customer
+                    break
+            for service in serviceMst['Items']:
+                if reservation['service_id'] == service['serviceId']:
+                    reservation['service_name'] = service
+                    break
+
+        # パラメータを取得
+        data = event.get('queryStringParameters')  # ["20240130", "20240131", "20240201"...]
+        parsed_data = json.loads(data['data'])
+        reservationId = parsed_data.get('reservationId', False)
+
+        # レスポンスデータの内、reservationIdに値がある場合絞り込みを行う
+        if reservationId:
+            response = table.query(
+                KeyConditionExpression = 'reservationId = :reservationId',
+                ExpressionAttributeValues = {
+                    ':reservationId': reservationId
+                }
+            )
+
         
         # 結果を返す
         return {

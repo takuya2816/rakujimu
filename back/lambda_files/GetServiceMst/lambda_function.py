@@ -16,6 +16,20 @@ def lambda_handler(event, context):
         # CustomerMst テーブルから全データを参照する。
         table = dynamodb.Table('ServiceMst')
         response = table.scan()
+
+        # パラメータを取得
+        data = event.get('queryStringParameters')  # ["20240130", "20240131", "20240201"...]
+        parsed_data = json.loads(data['data'])
+        customerId = parsed_data.get('customerId', False)
+
+        # レスポンスデータの内、customerIdに値がある場合絞り込みを行う
+        if customerId:
+            response = table.query(
+                KeyConditionExpression = 'customerId = :customerId',
+                ExpressionAttributeValues = {
+                    ':customerId': customerId
+                }
+            )
         
         # 結果を返す
         return {

@@ -58,6 +58,7 @@
 
 
 <script>
+import common from '@/plugins/common'
 export default {
   data() {
     return {
@@ -72,15 +73,18 @@ export default {
     async getCustomerInfo(customer_id) {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationInfo'
-      const res = await Common.gateway_get(apiurl, customer_id)
+      const res = await common.gateway_get(apiurl, customer_id)
       this.customer_info = res.Items  // TODO:変数の中身を確認して、for文を修正する
     },
 
     async getCustomerReservationList(customer_id) {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-      const res = await Common.gateway_get(apiurl, customer_id)
-      this.reservationList = res.Items  // TODO:変数の中身を確認して、for文を修正する
+      const data = {
+        customer_id: customer_id,
+      }
+      const res = await common.gateway_get(apiurl, data)
+      this.reservationList = res.Items
     },
 
     async editCustomerInfo(customer_id) {
