@@ -20,8 +20,6 @@
               <div class="list-item">{{ reservation.supply_date }}<br>{{ reservation.supply_sttime | hhmmss2hhmm }}</div>
               <div class="list-item">{{ reservation.customer_name }}</div>
               <div class="list-item">{{ reservation.service_name }}</div>
-              <!-- <div class="list-item">{{ getCustomerName(reservation.customer_id) }}</div>
-              <div class="list-item">{{ getServiceName(reservation.service_id) }}</div> -->
             </div>
           </a>
           <a :href="`/approve/${reservation.id}`" class="reservation-approve">承認</a>
@@ -52,8 +50,6 @@ export default {
   },
   mounted() {
     this.getReservationList()
-    this.getCustomerMst()  // NEXT:毎回叩くかどうか
-    this.getServiceMst()
   },
   methods:{
     async getReservationList(){  // getCustomerMst, serviceMstから名前を引用したリストを取得
@@ -62,26 +58,6 @@ export default {
       const res = await common.gateway_get(apiurl)
       this.reservationList = res.Items
     },
-    // async getCustomerMst(){
-    //   const apiurl =
-    //     'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
-    //   const res = await common.gateway_get(apiurl)
-    //   this.customerMst = res.Items
-    // },
-    // async getServiceMst(){
-    //   const apiurl =
-    //     'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetServiceMst'
-    //   const res = await common.gateway_get(apiurl)
-    //   this.serviceMst = res.Items
-    // },
-    // getCustomerName(customerId){
-    //   const customer = this.customerMst.find(customer => customer.id == customerId)
-    //   return customer.name
-    // },
-    // getServiceName(serviceId){
-    //   const service = this.serviceMst.find(service => service.id == serviceId)
-    //   return service.name
-    // }, 
   },
   filters: {
     datetime2hhmm(value) {

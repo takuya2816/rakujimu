@@ -5,26 +5,26 @@
     <div class="title">
       <h1>予約詳細</h1>
     </div>
-    <div>
+    <div class="details">
       <div class="detail-item">
         <span class="label">申込日時</span>
-        <!-- <span class="value">{{ reservation_info.applicationDate }}</span> -->
+        <span class="value">{{ reservation.regist_date }} {{ reservation.regist_datetime | datetime2hhmm }}</span>
       </div>
       <div class="detail-item">
         <span class="label">氏名</span>
-        <!-- <span class="value">{{ reservation_info.name }}</span> -->
+        <span class="value">{{ reservation.customer_name }}</span>
       </div>
       <div class="detail-item">
         <span class="label">メニュー</span>
-        <!-- <span class="value">{{ reservation_info.menu }}</span> -->
+        <span class="value">{{ reservation.service_name }}</span>
       </div>
       <div class="detail-item">
         <span class="label">予約開始日時</span>
-        <!-- <span class="value">{{ reservation_info.startDate }}</span> -->
+        <span class="value">{{ reservation.supply_date }} {{ reservation.supply_sttime | hhmmss2hhmm }}</span>
       </div>
       <div class="detail-item">
         <span class="label">承認日時</span>
-        <!-- <span class="value">{{ reservation_info.approvalDate || 'ー' }}</span> -->
+        <span class="value">{{ reservation.approval_flag || 'ー' }}</span>
       </div>
     </div>
     <div>
@@ -42,7 +42,7 @@ import common from '@/plugins/common'
 export default {
   data() {
     return {
-      reservation_info:{}
+      reservation:{}
     }
   },
   mounted() {
@@ -52,22 +52,40 @@ export default {
     async getReservationInfo(reservationId) {
       // 仮のAPIコールを実行し、予約情報を取得
       const apiurl =
-        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationInfo'
-      const res = await common.gateway_get(apiurl, reservationId)
-      this.customer_info = res.Items  // TODO:変数の中身を確認して、for文を修正する
+        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
+      const data = { reservationId: reservationId }
+      const res = await common.gateway_get(apiurl, data)
+      this.reservation = res
+      console.log(this.reservation)
     },
 
     async approveReservation(reservationId) {
       // 承認ボタンが押されたときの処理
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistXXX'
-      const res = await common.gateway_post(apiurl, reservationId)
+      const data = { reservationId: reservationId }
+      const res = await common.gateway_get(apiurl, data)
     },
-
+    
     editReservationInfo() {
       // 編集ボタンが押されたときの処理
-      // TODO:予約IDを含めるcustomer_infoを次ページに渡す
+      // TODO:予約IDを含めるreservationを次ページに渡す
+      print()
     },
+  },
+  filters: {
+    datetime2hhmm(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    },
+    hhmmss2hhmm(value) {
+      if (!value) return '';
+      const [hours, minutes] = value.split(':');
+      return `${hours}:${minutes}`;
+    }
   },
   layout: 'supplier',
 }
@@ -77,15 +95,23 @@ export default {
 .details {
   margin-bottom: 20px;
 }
+
 .detail-item {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 20px; /* 項目ごとの間隔を広げる */
 }
+
 .detail-item .label {
   color: #999;
+  flex-basis: 40%;
+  text-align: right; /* 右揃えにする */
+  margin-right: 20px;
 }
+
 .detail-item .value {
   color: #333;
+  flex-basis: 60%;
+  text-align: left;
 }
 </style>
