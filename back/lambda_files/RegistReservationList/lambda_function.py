@@ -6,6 +6,7 @@ import os
 import logging
 import datetime
 import requests
+from boto3.dynamodb.conditions import Attr
 
 # 環境変数 Todo:リファクタリング
 #REMIND_DATE_DIFFERENCE = int(os.getenv(
@@ -119,10 +120,6 @@ def lambda_handler(event, context):
         #if body is None:
         #    error_msg_display = common_const.const.MSG_ERROR_NOPARAM
         #    return utils.create_error_response(error_msg_display, 400)
-    
-        # シーケンスデータを得る
-        seqtable = dynamodb.Table('sequence')
-        nextseq = get_next_seq(seqtable, 'ReservationList')
         
         ## フォームに入力されたデータを得る
         param = json.loads(event['body'])
@@ -143,16 +140,17 @@ def lambda_handler(event, context):
                 'statusCode' : 403
             }
 
-        datetime = param['datetime']
-        resist_reserve_date = param['resist_datetime']
+        reservedate = param['reserve_date']
+        resistdatetime = param['resist_datetime']
         employee = "" # param['employee']
         serviceid = param['serviceid']
+        approvalflag = param['approval_flag'] 
         memo = param['memo']
         
         # 現在の時刻を取得
         nowtime = time.time()
-        timestamp = datetime.datetime.fromtimestamp(nowtime)
-        # 初顧客の場合はCustomerMst テーブルに登録する #Todo（20240414）
+        timestamp = str(datetime.datetime.fromtimestamp(nowtime))
+
         table = dynamodb.Table('ReservationList')
 
         # line_idとdatetimeで既存の予約を検索

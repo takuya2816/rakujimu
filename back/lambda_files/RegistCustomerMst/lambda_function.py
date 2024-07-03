@@ -2,6 +2,7 @@ import boto3
 import json
 import time
 import datetime
+from boto3.dynamodb.conditions import Attr
 
 # DynamoDBオブジェクト
 dynamodb = boto3.resource('dynamodb')
@@ -20,53 +21,67 @@ def get_next_seq(table, tablename):
     )
     return response['Attributes']['seq']
 
-
 def lambda_handler(event, context):
     try:
-        # パラメータログ、チェック
-        #logger.info(event)
-        #body = json.loads(event['body'])
-        #if body is None:
-        #    error_msg_display = common_const.const.MSG_ERROR_NOPARAM
-        #    return utils.create_error_response(error_msg_display, 400)
-    
-        # シーケンスデータを得る
-        seqtable = dynamodb.Table('sequence')
-        nextseq = get_next_seq(seqtable, 'CustomerMst')
-        
-        ## フォームに入力されたデータを得る
         param = json.loads(event['body'])
         lineid = param['lineid']
-        ## Todo:既に登録されている場合
-
+        
+        table = dynamodb.Table('CustomerMst')
+        
+        # line_idでスキャンして既存のデータを確認. 1000項目以上になったときはパフォーマンスチューニング必須
+        response = table.scan(
+            FilterExpression=Attr('line_id').eq(lineid)
+        )
+        items = response.get('Items', [])
+        existing_item = items[0] if items else None
         
         name = param['name']
-        if not param['address']: #住所はnullOK
-            address = "None"
-        else:
-            address = param['address']
+        address = param.get('address', 'None')
         gender = param['gender']
         phonenumber = str(param['phonenumber'])
         date = param['date']
         
-        # 現在の時刻を取得
         nowtime = time.time()
-        timestamp = datetime.datetime.fromtimestamp(nowtime)
-        # CustomerMst テーブルに登録する
-        table = dynamodb.Table('CustomerMst')
-        table.put_item(
-            Item = {
-                'id' : nextseq,
-                'line_id' : lineid,
-                'name' : name,
-                'gender' : gender,
-                'tel' : phonenumber,
-                'birthday' : date,
-                'regist_datetime' : str(timestamp)
-            }
-        )
+        timestamp = str(datetime.datetime.fromtimestamp(nowtime))
         
-        # 結果を返す
+        if existing_item:
+            # 既存のデータを更新
+            response = table.update_item(
+                Key={
+                    'id': existing_item['id']  # プライマリキー 'id' を使用
+                },
+                UpdateExpression="set line_id = :l, #n = :n, gender = :g, tel = :t, birthday = :b, update_datetime = :u",
+                ExpressionAttributeNames={
+                    '#n': 'name'  # 'name' は予約語なので、プレースホルダーを使用
+                },
+                ExpressionAttributeValues={
+                    ':l': lineid,
+                    ':n': name,
+                    ':g': gender,
+                    ':t': phonenumber,
+                    ':b': date,
+                    ':u': timestamp
+                },
+                ReturnValues="UPDATED_NEW"
+            )
+        else:
+            # 新しいデータを作成
+            seqtable = dynamodb.Table('sequence')
+            nextseq = get_next_seq(seqtable, 'CustomerMst')
+            
+            table.put_item(
+                Item = {
+                    'id' : nextseq,
+                    'line_id' : lineid,
+                    'name' : name,
+                    'gender' : gender,
+                    'tel' : phonenumber,
+                    'birthday' : date,
+                    'regist_datetime' : timestamp,
+                    'update_datetime' : timestamp
+                }
+            )
+        
         return {
             "isBase64Encoded": False,
             "statusCode": 200,
@@ -79,9 +94,10 @@ def lambda_handler(event, context):
             "body": json.dumps({"result":"ok"})
         }
         
-    except:
+    except Exception as e:
         import traceback
         traceback.print_exc()
         return {
-            'statusCode' : 500
+            'statusCode' : 500,
+            'body': json.dumps({"error": str(e)})
         }

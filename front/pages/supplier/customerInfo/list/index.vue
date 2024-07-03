@@ -41,7 +41,7 @@ export default {
       //   .catch((error) => {
       //     this.liffError = error
       //   })
-      reservationList: []
+      customerMst: []
     }
   },
   mounted() {
@@ -52,7 +52,7 @@ export default {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
       const res = await common.gateway_get(apiurl)
-      this.reservationList = res.Items  // TODO:変数の中身を確認して、for文を修正する
+      this.customerMst = res.Items
     }
   },
   layout: 'supplier',
