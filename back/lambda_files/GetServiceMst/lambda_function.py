@@ -13,7 +13,7 @@ class DecimalEncoder(json.JSONEncoder):
     
 def lambda_handler(event, context):
     try:
-        # CustomerMst テーブルから全データを参照する。
+        # ServiceMst テーブルから全データを参照する。
         table = dynamodb.Table('ServiceMst')
         response = table.scan()
         
@@ -24,7 +24,7 @@ def lambda_handler(event, context):
             "headers": {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST,GET',
+                'Access-Control-Allow-Methods': 'GET',
                 'Access-Control-Allow-Origin': '*'
             },
             "body": json.dumps(response, cls=DecimalEncoder)

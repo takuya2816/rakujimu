@@ -46,8 +46,7 @@ def lambda_handler(event, context):
         else:
             address = param['address']
         gender = param['gender']
-        mailaddress = param['mailaddress']
-        phonenumber = param['phonenumber']
+        phonenumber = str(param['phonenumber'])
         date = param['date']
         
         # 現在の時刻を取得
@@ -60,12 +59,10 @@ def lambda_handler(event, context):
                 'id' : nextseq,
                 'line_id' : lineid,
                 'name' : name,
-                'address' : address,
                 'gender' : gender,
-                'mailaddress' : mailaddress,
-                'phone_number' : phonenumber,
-                'date' : date,
-                'update_datetime' : str(timestamp)
+                'tel' : phonenumber,
+                'birthday' : date,
+                'regist_datetime' : str(timestamp)
             }
         )
         
