@@ -107,10 +107,17 @@ export default {
     background-color: #ccc;
     color: #333;
   }
+  .cancel-button{
+    background-color: #ccc;
+    color: #333;
+  }
   .edit-button:hover {
     background-color: #ddd;
   }
   .post-button:hover {
+    background-color: #aaa;
+  }
+  .cancel-button:hover {
     background-color: #aaa;
   }
 </style>
