@@ -1,0 +1,124 @@
+<!-- 予約一覧画面 -->
+<template>
+  <div>
+    <div class="title">
+      <h1>予約一覧</h1>
+    </div>
+    <div class="list-header">
+      <div class="list-header-item">申込日時</div>
+      <div class="list-header-item">予約日時</div>
+      <div class="list-header-item">氏名</div>
+      <div class="list-header-item">メニュー</div>
+      <div class="list-header-item">     </div>
+    </div>
+    <div class="list-body">
+      <div class="list-content">
+        <div v-for="reservation in reservationList" :key="reservation.id" class="list-record">
+          <a :href="`/supplier/reservedInfo/detail/${reservation.id}`" class="reservation-link">
+            <div class="list-info">
+              <div class="list-item">{{ reservation.regist_date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
+              <div class="list-item">{{ reservation.supply_date }}<br>{{ reservation.supply_sttime | hhmmss2hhmm }}</div>
+              <div class="list-item">{{ reservation.customer_name }}</div>
+              <div class="list-item">{{ reservation.service_name }}</div>
+              <!-- <div class="list-item">{{ getCustomerName(reservation.customer_id) }}</div>
+              <div class="list-item">{{ getServiceName(reservation.service_id) }}</div> -->
+            </div>
+          </a>
+          <a :href="`/approve/${reservation.id}`" class="reservation-approve">承認</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import common from '@/plugins/common'
+export default {
+  data() {
+    return {
+      // 開発のためliffコメントアウト
+      // this.$liffInit
+      //   .then(() => {
+      //     this.idToken = liff.getIDToken();
+      //     // this.accessToken = liff.getAccessToken();
+      //   })
+      //   .catch((error) => {
+      //     this.liffError = error
+      //   })
+      reservationList: [],
+      customerMst:{},
+      serviceMst:{},
+    }
+  },
+  mounted() {
+    this.getReservationList()
+    this.getCustomerMst()  // NEXT:毎回叩くかどうか
+    this.getServiceMst()
+  },
+  methods:{
+    async getReservationList(){  // getCustomerMst, serviceMstから名前を引用したリストを取得
+      const apiurl =
+        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
+      const res = await common.gateway_get(apiurl)
+      this.reservationList = res.Items
+    },
+    // async getCustomerMst(){
+    //   const apiurl =
+    //     'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
+    //   const res = await common.gateway_get(apiurl)
+    //   this.customerMst = res.Items
+    // },
+    // async getServiceMst(){
+    //   const apiurl =
+    //     'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetServiceMst'
+    //   const res = await common.gateway_get(apiurl)
+    //   this.serviceMst = res.Items
+    // },
+    // getCustomerName(customerId){
+    //   const customer = this.customerMst.find(customer => customer.id == customerId)
+    //   return customer.name
+    // },
+    // getServiceName(serviceId){
+    //   const service = this.serviceMst.find(service => service.id == serviceId)
+    //   return service.name
+    // }, 
+  },
+  filters: {
+    datetime2hhmm(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    },
+    hhmmss2hhmm(value) {
+      if (!value) return '';
+      const [hours, minutes] = value.split(':');
+      return `${hours}:${minutes}`;
+    }
+  },
+  layout: 'supplier',
+}
+</script>
+
+<style>
+.reservation-link {
+  display: flex;
+  flex-grow: 1;
+  text-decoration: none;
+  color: inherit;
+}
+.reservation-approve {
+  padding: 5px 10px;
+  background-color: #ccc;
+  border-radius: 5px;
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+  margin-left: 10px;
+}
+
+.reservation-approve:hover {
+  background-color: #aaa;
+}
+</style>

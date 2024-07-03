@@ -28,6 +28,7 @@
 </template>
 
 <script>
+import common from '@/plugins/common'
 export default {
   data() {
     return {
@@ -50,7 +51,7 @@ export default {
     async getCustomerMst(){
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
-      const res = await Common.gateway_get(apiurl)
+      const res = await common.gateway_get(apiurl)
       this.reservationList = res.Items  // TODO:変数の中身を確認して、for文を修正する
     }
   },

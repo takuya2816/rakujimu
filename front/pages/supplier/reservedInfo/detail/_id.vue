@@ -38,6 +38,7 @@
 
 
 <script>
+import common from '@/plugins/common'
 export default {
   data() {
     return {
@@ -45,22 +46,22 @@ export default {
     }
   },
   mounted() {
-    this.getCustomerInfo(this.$route.params.id)
+    this.getReservationInfo(this.$route.params.id)
   },
   methods: {
-    async getCustomerInfo(reservation_id) {
+    async getReservationInfo(reservationId) {
       // 仮のAPIコールを実行し、予約情報を取得
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationInfo'
-      const res = await Common.gateway_get(apiurl, reservation_id)
+      const res = await common.gateway_get(apiurl, reservationId)
       this.customer_info = res.Items  // TODO:変数の中身を確認して、for文を修正する
     },
 
-    async approveReservation(reservation_id) {
+    async approveReservation(reservationId) {
       // 承認ボタンが押されたときの処理
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistXXX'
-      const res = await Common.gateway_post(apiurl, reservation_id)
+      const res = await common.gateway_post(apiurl, reservationId)
     },
 
     editReservationInfo() {
