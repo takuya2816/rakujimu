@@ -14,7 +14,7 @@ from boto3.dynamodb.conditions import Attr
 #LOGGER_LEVEL = os.environ.get("LOGGER_LEVEL")
 #CHANNEL_TYPE = os.environ.get("CHANNEL_TYPE")
 #CHANNEL_ID = os.getenv('OA_CHANNEL_ID', None)
-LIFF_CHANNEL_ID = 2000948278-yXl6L5MR #os.getenv('LIFF_CHANNEL_ID', None)
+LIFF_CHANNEL_ID = "2000948278-yXl6L5MR" #os.getenv('LIFF_CHANNEL_ID', None)
 
 # DynamoDBオブジェクト
 dynamodb = boto3.resource('dynamodb')
@@ -78,7 +78,7 @@ def get_customer_id(lineid, seqtable):
     response = table.scan(
         FilterExpression=Attr('line_id').eq(lineid)
     )
-    existing_item = response.get('Items', [])[0] if response.get('Items') else None
+    existing_item = response.get('Item')
 
     # アイテムが存在しない場合、新しい顧客として登録
     if existing_item:
@@ -197,7 +197,7 @@ def lambda_handler(event, context):
             FilterExpression=Attr('line_id').eq(lineid) & Attr('reserve_date').eq(datetime)
         )
 
-        existing_item = response.get('Items', [])[0] if response.get('Items') else None
+        existing_item = response.get('Item')
 
         if existing_item:
             if deleteFlag:

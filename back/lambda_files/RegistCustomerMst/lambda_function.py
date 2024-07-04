@@ -24,22 +24,26 @@ def get_next_seq(table, tablename):
 def lambda_handler(event, context):
     try:
         param = json.loads(event['body'])
-        lineid = param['lineid']
+        param = param['params']['data']
+        customerId = param['id']
         
+        
+        # idから項目検索
         table = dynamodb.Table('CustomerMst')
-        
-        # line_idでスキャンして既存のデータを確認. 1000項目以上になったときはパフォーマンスチューニング必須
-        response = table.scan(
-            FilterExpression=Attr('line_id').eq(lineid)
+        response = table.get_item(
+            Key={
+                'id': customerId
+            }
         )
-        items = response.get('Items', [])
-        existing_item = items[0] if items else None
+        
+        existing_item = response.get('Item')
         
         name = param['name']
         address = param.get('address', 'None')
+        lineId = param.get('lineId', 'None')
         gender = param['gender']
-        phonenumber = str(param['phonenumber'])
-        date = param['date']
+        tel = str(param['tel'])
+        birthday = param['birthday']
         
         nowtime = time.time()
         timestamp = str(datetime.datetime.fromtimestamp(nowtime))
@@ -50,16 +54,15 @@ def lambda_handler(event, context):
                 Key={
                     'id': existing_item['id']  # プライマリキー 'id' を使用
                 },
-                UpdateExpression="set line_id = :l, #n = :n, gender = :g, tel = :t, birthday = :b, update_datetime = :u",
+                UpdateExpression="set #n = :n, gender = :g, tel = :t, birthday = :b, update_datetime = :u",
                 ExpressionAttributeNames={
                     '#n': 'name'  # 'name' は予約語なので、プレースホルダーを使用
                 },
                 ExpressionAttributeValues={
-                    ':l': lineid,
                     ':n': name,
                     ':g': gender,
-                    ':t': phonenumber,
-                    ':b': date,
+                    ':t': tel,
+                    ':b': birthday,
                     ':u': timestamp
                 },
                 ReturnValues="UPDATED_NEW"
@@ -72,11 +75,11 @@ def lambda_handler(event, context):
             table.put_item(
                 Item = {
                     'id' : nextseq,
-                    'line_id' : lineid,
+                    'line_id' : lineId,
                     'name' : name,
                     'gender' : gender,
-                    'tel' : phonenumber,
-                    'birthday' : date,
+                    'tel' : tel,
+                    'birthday' : birthday,
                     'regist_datetime' : timestamp,
                     'update_datetime' : timestamp
                 }
