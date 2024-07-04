@@ -51,7 +51,7 @@
       </div>
     </div>
     <div class="buttons">
-      <button @click="editCustomerMst" class="edit-button">編集</button>
+      <button class="edit-button" @click="editCustomerInfo">編集</button>
     </div>
   </div>
 </template> 
@@ -60,6 +60,7 @@
 <script>
 import common from '@/plugins/common'
 export default {
+  layout: 'supplier',
   data() {
     return {
       customer:{},
@@ -82,16 +83,15 @@ export default {
     async getReservationList(customerId) {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-      const data = {customerId: [customerId]}
-      const res = await common.gateway_get(apiurl, data)
+      // const data = {customerId: customerId}
+      // const res = await common.gateway_get(apiurl, data)  # TODO:customerIdで絞り込み
+      const res = await common.gateway_get(apiurl)
       this.reservationList = res.Items
     },
 
-    async editCustomerMst(customerId) {
-      // 承認ボタンが押されたときの処理
-      const apiurl =
-        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistXXX'
-      const res = await common.gateway_post(apiurl, customerId)
+    editCustomerInfo(customerId) {
+      // 編集ボタンが押されたときの処理
+      this.$router.push(`/supplier/customerInfo/detail/${this.$route.params.id}/edit`)
     },
   },
   filters: {
@@ -116,7 +116,6 @@ export default {
       return `${hours}:${minutes}`;
     }
   },
-  layout: 'supplier',
 }
 </script>
 
