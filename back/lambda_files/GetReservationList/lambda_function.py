@@ -23,31 +23,36 @@ def lambda_handler(event, context):
         customer_ids = False
         reserved_flg = False
         reserving_flg = False
+        
         data = event.get('queryStringParameters', False)
+        print(data)
         if data:  # リクエストパラメータがある場合はレコードを絞り込む
-            parsed_data = event.get('queryStringParameters', {})
+            parsed_data = json.loads(data['data'])
             reservation_ids = parsed_data.get('reservationId', False)
             customer_ids = parsed_data.get('customerId', False)
             reserved_flg = parsed_data.get('reservedFlg', False)
             reserving_flg = parsed_data.get('reservingFlg', False)
 
         # フィルター条件の初期化
-        filter_expression = None
+        filter_expression = Attr('delete_flag').eq(False)
         current_datetime = datetime.now().isoformat()
         
-        print(f"customer_ids:{customer_ids}")
-        print(f"reserved_flg:{reserved_flg}")
-        print(f"reserving_flg:{reserving_flg}")
+        print(f"reserved_flg:{reserved_flg}")  # テスト
+        print(f"reserving_flg:{reserving_flg}")  # テスト
 
         # フィルター条件の組み立て
         if reservation_ids:
-            filter_expression &= Attr('id').is_in([int(res_id) for res_id in reservation_ids])
+            reservation_condition = Attr('id').is_in([int(res_id) for res_id in reservation_ids])
+            filter_expression = filter_expression & reservation_condition if filter_expression else reservation_condition
         if customer_ids:
-            filter_expression &= Attr('customer_id').is_in([int(cust_id) for cust_id in customer_ids])
+            customer_condition = Attr('customer_id').is_in([int(cust_id) for cust_id in customer_ids])
+            filter_expression = filter_expression & customer_condition if filter_expression else customer_condition
         if reserved_flg:
-            filter_expression &= Attr('reserved_flg').eq(reserved_flg) & Attr('supply_date').lt(current_datetime)
+            reserved_condition = Attr('reserved_flg').eq(reserved_flg) & Attr('reserve_date').lt(current_datetime)
+            filter_expression = filter_expression & reserved_condition if filter_expression else reserved_condition
         if reserving_flg:
-            filter_expression &= Attr('reserving_flg').eq(reserving_flg) & Attr('supply_date').gte(current_datetime)
+            reserving_condition = Attr('reserving_flg').eq(reserving_flg) & Attr('reserve_date').gte(current_datetime)
+            filter_expression = filter_expression & reserving_condition if filter_expression else reserving_condition
 
         # フィルター条件がある場合はスキャンを実行
         if filter_expression:
