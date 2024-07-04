@@ -4,7 +4,7 @@ import time
 import os
 #from common import (common_const, utils, line)
 import logging
-import datetime
+from datetime import datetime, timedelta
 import requests
 from boto3.dynamodb.conditions import Attr
 
@@ -70,22 +70,22 @@ def get_profile(id_token, channel_id):
     res_body = json.loads(response.text)
     return res_body
 
-# line_idが一致するアイテムが存在しない場合は新しい顧客として登録
-def regist_customer(lineid, seqtable):
-    new_customer_flag = False
+# line_idからcustomer_idを取得
+def get_customer_id(lineid, seqtable):
     table = dynamodb.Table('CustomerMst')
 
     # line_idが一致するアイテムをスキャン
     response = table.scan(
         FilterExpression=Attr('line_id').eq(lineid)
     )
-    items = response.get('Items', [])
-    existing_item = items[0] if items else None
+    existing_item = response.get('Items', [])[0] if response.get('Items') else None
 
     # アイテムが存在しない場合、新しい顧客として登録
-    if not existing_item:
-        new_customer_flag = True
+    if existing_item:
+        customer_id = existing_item['id']
+    else:
         nextseq = get_next_seq(seqtable, 'CustomerMst')
+        customer_id = nextseq
 
         # 現在の日時を取得
         current_datetime = datetime.now().isoformat()
@@ -108,9 +108,47 @@ def regist_customer(lineid, seqtable):
         # レスポンスのステータスコードを確認
         if response.status_code != 200:
             print(f"Error registering customer: {response.text}")
-            new_customer_flag = False
             
-    return new_customer_flag
+    return customer_id
+
+def cal_endtime(reserve_sttime, service_id):
+    table = dynamodb.Table('ServiceMst')
+    # プライマリキーを使用してアイテムを取得
+    response = table.get_item(
+        Key={
+            id: service_id
+        }
+    )
+    items = response.get('Items', [])
+
+    reserve_sttime = datetime.strptime(reserve_sttime, "%H:%M")
+    service_term = datetime.strptime(items['term'], "%H:%M")
+    delta = timedelta(hours=service_term.hour, minutes=service_term.minute)
+
+    return reserve_sttime + delta
+
+# 既存の予約とかぶっていないことをチェック
+def check_reservable(reserve_id, reserve_date, reserve_sttime, reserve_endtime):
+    reserve_sttime = datetime.strptime(reserve_sttime, "%H:%M")
+    reserve_endtime = datetime.strptime(reserve_endtime, "%H:%M")
+    reservable_flag = True
+
+    table = dynamodb.Table('ReservationList')
+    response = table.scan(
+        # 提供予定日が同じで、編集対象予約と削除済予約を除外したものを検査
+        FilterExpression=Attr('reserve_date').eq(reserve_date) & Attr('id').ne(reserve_id) & Attr('delete_flag').eq('false')
+    )
+    for item in response.get('Items', []):
+        existing_sttime = datetime.strptime(item['reserve_sttime'], "%H:%M")
+        existing_endtime = datetime.strptime(item['reserve_endtime'], "%H:%M")
+
+        # 時間の重複をチェック
+        if ((reserve_sttime < existing_endtime and reserve_endtime > existing_sttime) or
+            (existing_sttime < reserve_endtime and existing_endtime > reserve_sttime)):
+            reservable_flag = False
+            break
+
+    return reservable_flag
 
 def lambda_handler(event, context):
     try:
@@ -140,11 +178,12 @@ def lambda_handler(event, context):
                 'statusCode' : 403
             }
 
-        reservedate = param['reserve_date']
-        resistdatetime = param['resist_datetime']
+        reserveDate = param['reserve_date']
+        reserveSttime = param['reserve_sttime']
         employee = "" # param['employee']
-        serviceid = param['serviceid']
-        approvalflag = param['approval_flag'] 
+        serviceId = param['serviceId']
+        approvalFlag = param['approval_flag']
+        deleteFlag = param['delete_flag']
         memo = param['memo']
         
         # 現在の時刻を取得
@@ -161,38 +200,84 @@ def lambda_handler(event, context):
         existing_item = response.get('Items', [])[0] if response.get('Items') else None
 
         if existing_item:
-            # 既存の予約を更新
-            response = table.update_item(
-                Key={
-                    'id': existing_item['id']
-                },
-                UpdateExpression="set resist_datetime = :rrd, reserve_date = :rd, employee_id = :e, service_id = :s, approval_flag = :af, memo = :m, update_datetime = :u",
-                ExpressionAttributeValues={
-                    ':rdt': resistdatetime,
-                    ':rd': reservedate,
-                    ':e': "",
-                    ':s': serviceid,
-                    ':af': approvalflag,
-                    ':m': memo,
-                    ':u': timestamp
-                },
-                ReturnValues="UPDATED_NEW"
-            )
+            if deleteFlag:
+                # 既存の予約を削除
+                response = table.update_item(
+                    Key={
+                        'id': existing_item['id']
+                    },
+                    UpdateExpression="set delete_flag = :df, delete_datetime = :ddt",
+                    ExpressionAttributeValues={
+                        ':df': deleteFlag,
+                        ':ddt': timestamp,
+                    },
+                    ReturnValues="DELETE_ITEM"
+                )
+            elif approvalFlag:
+                # 既存の予約を承認
+                response = table.update_item(
+                    Key={
+                        'id': existing_item['id']
+                    },
+                    UpdateExpression="set approval_flag = :af, approval_datetime = :adt",
+                    ExpressionAttributeValues={
+                        ':af': approvalFlag,
+                        ':adt': timestamp
+                    },
+                    ReturnValues="UPDATED_NEW"
+                )
+            else:
+                # 既存の予約を更新
+                # reserveEndtimeを算出
+                reserveEndtime = cal_endtime(reserveSttime, serviceId)
+                # 既存の予約とかぶっていないことを確認
+                if not check_reservable(existing_item['id'], reserveDate, reserveSttime, reserveEndtime):
+                    return {
+                        "isBase64Encoded": False,
+                        "statusCode": 200,
+                        "headers": {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Headers': 'Content-Type',
+                            'Access-Control-Allow-Methods': 'POST,GET',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        "body": json.dumps({"result": "ng"})
+                    }
+                
+                response = table.update_item(
+                    Key={
+                        'id': existing_item['id']
+                    },
+                    UpdateExpression="set reserve_date = :rd, reserve_sttime = :rst, reserve_endtime = :ret, employee_id = :e, service_id = :s, memo = :m, update_datetime = :u",
+                    ExpressionAttributeValues={
+                        ':rd': reserveDate,
+                        ':rst': reserveSttime,
+                        ':ret': reserveEndtime,
+                        ':e': "",
+                        ':s': serviceId,
+                        ':m': memo,
+                        ':u': timestamp
+                    },
+                    ReturnValues="UPDATED_NEW"
+                )
         else:
-            # lineidがCustomerMstテーブルに登録されていない場合は登録
-            regist_customer(lineid, seqtable)
+            seqtable = dynamodb.Table('sequence')
+            # lineidからcustomerIdを取得
+            customerId = get_customer_id(lineid, seqtable)
             
             # 新しい予約を作成
-            seqtable = dynamodb.Table('sequence')
             nextseq = get_next_seq(seqtable, 'ReservationList')
             table.put_item(
                 Item = {
                     'id' : nextseq,
-                    'resist_datetime' : resistdatetime,
-                    'reserve_date' : reservedate,
-                    'line_id' : lineid,
+                    'resist_datetime' : timestamp,
+                    'reserve_date' : reserveDate,
+                    'reserve_sttime' : reserveSttime,
+                    'reserve_endtime' : reserveEndtime,
+                    'customer_id' : customerId,
+                    'delete_flag' : 'false',
                     'employee_id' : employee,
-                    'service_id' : serviceid,
+                    'service_id' : serviceId,
                     'approval_flag' : 'false',
                     'memo' : memo,
                     'update_datetime' : str(timestamp)

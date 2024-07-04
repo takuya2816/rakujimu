@@ -2,6 +2,7 @@ import boto3
 import json
 import decimal
 import datetime
+from boto3.dynamodb.conditions import Attr
 from datetime import timedelta
 
 # DynamoDBオブジェクト
@@ -157,7 +158,7 @@ def get_reserved_list(display_days, time_iter):  # ->{"20240130": ["11:00","12:0
             }
 
     Note:
-        - この関数はDynamoDBの'ReservationList'テーブルからデータを取得します。
+        - この関数はDynamoDBの'ReservationList'テーブルから削除フラグが立っていないデータを取得します。
         - テーブルには予約の日付（曜日）、開始時間、終了時間が格納されていることを前提としています。
         - 返される時間リストは指定された時間間隔(time_iter)に基づいて生成されます。
 
@@ -170,12 +171,16 @@ def get_reserved_list(display_days, time_iter):  # ->{"20240130": ["11:00","12:0
     """
     reserved_dict = {}
     table = dynamodb.Table('ReservationList')
-    response = table.scan()
     
     # 対象の範囲の予約済データを15分毎の単位で取得
-    reserved_datetime_list = response.get('Items', [])
     for display_day in display_days:  # Mon~Sunで繰り返し
         times_list = []
+        # 各日付に対して個別にクエリを実行
+        response = table.scan(
+            FilterExpression=Attr('reserve_date').eq(display_day) & 
+                             (Attr('delete_flag').eq('false') | Attr('delete_flag').not_exists())
+        )
+        reserved_datetime_list = response.get('Items', [])
         target_dayofweek:str = datetime.datetime.strptime(display_day, '%Y%m%d').strftime('%A')
         for reserved_datetime_row in reserved_datetime_list:
             if reserved_datetime_row['supply_date'] == target_dayofweek:
