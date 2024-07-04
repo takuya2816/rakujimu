@@ -16,8 +16,8 @@
         <div v-for="reservation in reservationList" :key="reservation.id" class="list-record">
           <a :href="`/supplier/reservedInfo/detail/${reservation.id}`" class="reservation-link">
             <div class="list-info">
-              <div class="list-item">{{ reservation.regist_date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
-              <div class="list-item">{{ reservation.supply_date }}<br>{{ reservation.supply_sttime | hhmmss2hhmm }}</div>
+              <div class="list-item">{{ reservation.regist_datetime | datetime2date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
+              <div class="list-item">{{ reservation.reserve_date }}<br>{{ reservation.reserve_sttime | hhmmss2hhmm }}</div>
               <div class="list-item">{{ reservation.customer_name }}</div>
               <div class="list-item">{{ reservation.service_name }}</div>
             </div>
@@ -60,11 +60,19 @@ export default {
     },
   },
   filters: {
+    datetime2date(value) {
+      if (!value) return '';
+      const datetime = new Date(value);
+      const year = datetime.getFullYear();
+      const month = String(datetime.getMonth() + 1).padStart(2, '0');
+      const day = String(datetime.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    },
     datetime2hhmm(value) {
       if (!value) return '';
-      const date = new Date(value);
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const datetime = new Date(value);
+      const hours = String(datetime.getHours()).padStart(2, '0');
+      const minutes = String(datetime.getMinutes()).padStart(2, '0');
       return `${hours}:${minutes}`;
     },
     hhmmss2hhmm(value) {

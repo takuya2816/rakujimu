@@ -1,4 +1,6 @@
 import boto3
+from boto3.dynamodb.conditions import Key, Attr
+from datetime import datetime
 import json
 import decimal
 
@@ -11,24 +13,50 @@ class DecimalEncoder(json.JSONEncoder):
             return int(obj)
         return json.JSONEncoder.default(self, obj)
     
-def get_record_by_id(data, record_id):
-    # Itemsリストを取得
-    items = data.get('Items', [])
-    
-    # 指定されたIDを持つレコードを検索
-    for item in items:
-        if int(item.get('id')) == int(record_id):
-            return item
-    
-    # 指定されたIDを持つレコードが見つからない場合、Noneを返す
-    return None
-    
 
 def lambda_handler(event, context):
     try:
-        # ReservationList テーブルから全データを参照する。
+        dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table('ReservationList')
-        reservationList = table.scan()
+        
+        reservation_ids = False
+        customer_ids = False
+        reserved_flg = False
+        reserving_flg = False
+        data = event.get('queryStringParameters', False)
+        if data:  # リクエストパラメータがある場合はレコードを絞り込む
+            parsed_data = event.get('queryStringParameters', {})
+            reservation_ids = parsed_data.get('reservationId', False)
+            customer_ids = parsed_data.get('customerId', False)
+            reserved_flg = parsed_data.get('reservedFlg', False)
+            reserving_flg = parsed_data.get('reservingFlg', False)
+
+        # フィルター条件の初期化
+        filter_expression = None
+        current_datetime = datetime.now().isoformat()
+        
+        print(f"customer_ids:{customer_ids}")
+        print(f"reserved_flg:{reserved_flg}")
+        print(f"reserving_flg:{reserving_flg}")
+
+        # フィルター条件の組み立て
+        if reservation_ids:
+            filter_expression &= Attr('id').is_in([int(res_id) for res_id in reservation_ids])
+        if customer_ids:
+            filter_expression &= Attr('customer_id').is_in([int(cust_id) for cust_id in customer_ids])
+        if reserved_flg:
+            filter_expression &= Attr('reserved_flg').eq(reserved_flg) & Attr('supply_date').lt(current_datetime)
+        if reserving_flg:
+            filter_expression &= Attr('reserving_flg').eq(reserving_flg) & Attr('supply_date').gte(current_datetime)
+
+        # フィルター条件がある場合はスキャンを実行
+        if filter_expression:
+            reservationList = table.scan(
+                FilterExpression=filter_expression
+            )
+        else:
+            # フィルター条件がない場合は全てのレコードを取得
+            reservationList = table.scan()
 
         # CustomerMst, ServiceMst テーブルからデータを参照する
         table = dynamodb.Table('CustomerMst')
@@ -36,7 +64,7 @@ def lambda_handler(event, context):
         table = dynamodb.Table('ServiceMst')
         serviceMst = table.scan()
 
-        # CustomerMst, ServiceMst テーブルのを付与
+        # CustomerMst, ServiceMst テーブルの情報を付与
         for reservation in reservationList['Items']:
             for customer in customerMst['Items']:
                 if reservation['customer_id'] == customer['id']:
@@ -46,17 +74,7 @@ def lambda_handler(event, context):
                 if reservation['service_id'] == service['id']:
                     reservation['service_name'] = service['name']
                     break
-
-        # パラメータを取得
-        data = event.get('queryStringParameters', False)
-        if data:
-            # レスポンスデータの内、reservationIdに値がある場合絞り込みを行う
-            parsed_data = json.loads(data['data'])
-            reservationId = parsed_data.get('reservationId')
-            reservationList = get_record_by_id(reservationList, reservationId)
-            print(reservationList)
-
-        
+            
         # 結果を返す
         return {
             "isBase64Encoded": False,
@@ -69,7 +87,6 @@ def lambda_handler(event, context):
             },
             "body": json.dumps(reservationList, cls=DecimalEncoder)
         }
-        
     except:
         import traceback
         traceback.print_exc()
