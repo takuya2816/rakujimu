@@ -38,7 +38,7 @@
       <div class="list-body">
         <div class="list-content">
           <div v-for="reservation in reservationList" :key="reservation.id" class="list-record">
-            <a :href="`/supplier/customer/reservedInfo/detail/${reservation.id}`" class="reservation-link">
+            <a :href="`/supplier/reservedInfo/detail/${reservation.id}`" class="reservation-link">
               <div class="list-info">
                 <div class="list-item">{{ reservation.regist_date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
                 <div class="list-item">{{ reservation.supply_date }}<br>{{ reservation.supply_sttime | hhmmss2hhmm }}</div>
@@ -85,7 +85,7 @@ export default {
       const data = {customerId: customerId}
       // const res = await common.gateway_get(apiurl, data)  # TODO:customerIdで絞り込み
       const res = await common.gateway_get(apiurl)
-      this.reservationList = res
+      this.reservationList = res.Items
     },
 
     async editCustomerInfo(customerId) {

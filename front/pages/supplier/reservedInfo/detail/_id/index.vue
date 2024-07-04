@@ -8,7 +8,7 @@
     <div class="details">
       <div class="detail-item">
         <span class="label">申込日時</span>
-        <span class="value">{{ reservation.regist_date }} {{ reservation.regist_datetime | datetime2hhmm }}</span>
+        <span class="value">{{ reservation.regist_datetime | datetime2date }} {{ reservation.regist_datetime | datetime2hhmm }}</span>
       </div>
       <div class="detail-item">
         <span class="label">氏名</span>
@@ -20,7 +20,7 @@
       </div>
       <div class="detail-item">
         <span class="label">予約開始日時</span>
-        <span class="value">{{ reservation.supply_date }} {{ reservation.supply_sttime | hhmmss2hhmm }}</span>
+        <span class="value">{{ reservation.reserve_date }} {{ reservation.reserve_sttime | hhmmss2hhmm }}</span>
       </div>
       <div class="detail-item">
         <span class="label">承認日時</span>
@@ -53,10 +53,9 @@ export default {
       // 仮のAPIコールを実行し、予約情報を取得
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-      const data = { reservationId: reservationId }
+      const data = { reservationId: [reservationId] }
       const res = await common.gateway_get(apiurl, data)
-      this.reservation = res
-      console.log(this.reservation)
+      this.reservation = res.Items[0]  // リスト要素の1つ目を抽出
     },
 
     async approveReservation(reservationId) {
@@ -73,6 +72,14 @@ export default {
     },
   },
   filters: {
+    datetime2date(value) {
+      if (!value) return '';
+      const datetime = new Date(value);
+      const year = datetime.getFullYear();
+      const month = String(datetime.getMonth() + 1).padStart(2, '0');
+      const day = String(datetime.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    },
     datetime2hhmm(value) {
       if (!value) return '';
       const date = new Date(value);
