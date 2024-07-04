@@ -51,19 +51,11 @@ export default {
     async getCustomerMst(){
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
-      const data = {with_reserve_info: true}
-      // const res = await common.gateway_get(apiurl, data)
-      const res = await common.gateway_get(apiurl)
-      this.customerMst = res.Items
+      const data = {with_reserve_info: 1}
+      const res = await common.gateway_get(apiurl, data)
+      this.customerMst = res
       console.log(this.customerMst)
     },
-    async getReservationList(){
-      const apiurl =
-        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetUserReservationList'
-      const res = await common.gateway_get(apiurl)
-      this.customerMst = res.Items
-      console.log(this.customerMst)
-    }
   },
   layout: 'supplier',
 }
