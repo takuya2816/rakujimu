@@ -50,10 +50,11 @@ export default {
     },
     methods: {
         async getCustomerMst(customerId) {
-            const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
-            const data = { customerId }
+            const apiurl =
+                'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
+            const data = { customerId: [customerId] }
             const res = await common.gateway_get(apiurl, data)
-            this.customer = res
+            this.customer = res.Items[0]
         },
         async saveCustomerInfo() {
             try {

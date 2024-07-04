@@ -78,8 +78,8 @@ def get_customer_id(lineid, seqtable):
     response = table.scan(
         FilterExpression=Attr('line_id').eq(lineid)
     )
-    existing_item = response.get('Items', [])[0] if response.get('Items') else None
-
+    existing_item = response.get('Item')
+    
     # アイテムが存在しない場合、新しい顧客として登録
     if existing_item:
         customer_id = existing_item['id']
@@ -197,7 +197,7 @@ def lambda_handler(event, context):
             FilterExpression=Attr('line_id').eq(lineid) & Attr('reserve_date').eq(datetime)
         )
 
-        existing_item = response.get('Items', [])[0] if response.get('Items') else None
+        existing_item = response.get('Item')
 
         if existing_item:
             if deleteFlag:

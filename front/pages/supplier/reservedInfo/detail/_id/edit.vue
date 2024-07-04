@@ -6,8 +6,7 @@
         <div class="details">
             <div class="detail-item">
                 <span class="label">申込日時</span>
-                <span class="value">{{ reservation.regist_date }} {{ reservation.regist_datetime | datetime2hhmm
-                    }}</span>
+                <span class="value">{{ reservation.regist_datetime }}</span>
             </div>
             <div class="detail-item">
                 <span class="label">氏名</span>
@@ -26,13 +25,13 @@
             <div class="detail-item">
                 <span class="label">予約日</span>
                 <span class="value">
-                    <input id="supplyDate" v-model="reservation.supply_date" type="date" required>
+                    <input id="reserveDate" v-model="reservation.reserve_date" type="date" required>
                 </span>
             </div>
             <div class="detail-item">
                 <span class="label">予約時間</span>
                 <span class="value">
-                    <input id="supplyTime" v-model="reservation.supply_sttime" type="time" required>
+                    <input id="reserveTime" v-model="reservation.reserve_sttime" type="time" required>
                 </span>
             </div>
             <div class="buttons">
@@ -54,9 +53,9 @@ export default {
             reservation: {
                 customer_name: '',
                 service_name: '',
-                supply_date: '',
-                supply_sttime: '',
-                regist_date: ''
+                reserve_date: '',
+                reserve_sttime: '',
+                regist_datetime: ''
             },
             servicelist: []
         }
@@ -82,20 +81,14 @@ export default {
         },
         async getReservationInfo(reservationId) {
             const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-            const data = { reservationId }
+            const data = { reservationId: [reservationId] }
             const res = await common.gateway_get(apiurl, data)
-            this.reservation = {
-                customer_name: res.customer_name,
-                service_name: res.service_name,
-                supply_date: this.formatDate(res.supply_date),
-                supply_sttime: this.formatTime(res.supply_sttime),
-                regist_date: res.regist_date
-            }
+            this.reservation = res.Items[0]  // リスト要素の1つ目を抽出
         },
         async updateReservation() {
             const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
             const res = await common.gateway_post(apiurl, this.reservation)
-            if (res.success) {
+            if (res && res.result === "ok") {
                 // 保存成功時の処理
                 this.$router.push(`/supplier/reservedInfo/detail/${this.$route.params.id}`)
             } else {
@@ -105,15 +98,6 @@ export default {
         },
         cancelReservation() {
             this.$router.push(`/supplier/reservedInfo/detail/${this.$route.params.id}`)
-        },
-        formatDate(dateString) {
-            // APIから返される日付形式に応じて、適切な形式に変換する
-            const date = new Date(dateString)
-            return date.toISOString().split('T')[0]
-        },
-        formatTime(timeString) {
-            // APIから返される時間形式に応じて、適切な形式に変換する
-            return timeString.substring(0, 5)
         },
     },
 }

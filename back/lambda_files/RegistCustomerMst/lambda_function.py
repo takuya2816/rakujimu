@@ -36,8 +36,7 @@ def lambda_handler(event, context):
             }
         )
         
-        items = response.get('Items', [])
-        existing_item = items[0] if items else None
+        existing_item = response.get('Item')
         
         name = param['name']
         address = param.get('address', 'None')
