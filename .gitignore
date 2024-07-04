@@ -1,2 +1,15 @@
 back/lambda_files/GetReservableList/__pycache__
 tests/__pycache__
+
+package-lock.json"
+.babelrc"
+.editorconfig"
+.eslintrc.js"
+.gitignore"
+.prettierignore"
+.prettierrc"
+jest.config.js"
+package.json"
+
+node_modules/*
+dist/*
