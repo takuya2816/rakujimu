@@ -17,8 +17,8 @@
             <div class="list-info">
               <div class="list-item">{{ customer.name }}</div>
               <div class="list-item">{{ customer.gender }}</div>
-              <div class="list-item">{{ customer.lastReservedDate }}<br>{{ customer.lastReservedTime }}</div>
-              <div class="list-item">{{ customer.nextReservedDate }}<br>{{ customer.nextReservedTime }}</div>
+              <div class="list-item">{{ customer.lastReservedDate | datetime2date }}<br>{{ customer.lastReservedSttime}}</div>
+              <div class="list-item">{{ customer.nextReservedDate | datetime2date }}<br>{{ customer.nextReservedSttime}}</div>
             </div>
           </a>
         </div>
@@ -51,11 +51,32 @@ export default {
     async getCustomerMst(){
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
-      const data = {with_reserve_info: 1}
+      const data = {withReserveInfo: 1}
       const res = await common.gateway_get(apiurl, data)
       this.customerMst = res
-      console.log(this.customerMst)
     },
+  },
+  filters: {
+    datetime2date(value) {
+      if (!value) return '';
+      const datetime = new Date(value);
+      const year = datetime.getFullYear();
+      const month = String(datetime.getMonth() + 1).padStart(2, '0');
+      const day = String(datetime.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    },
+    datetime2hhmm(value) {
+      if (!value) return '';
+      const datetime = new Date(value);
+      const hours = String(datetime.getHours()).padStart(2, '0');
+      const minutes = String(datetime.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    },
+    hhmmss2hhmm(value) {
+      if (!value) return '';
+      const [hours, minutes] = value.split(':');
+      return `${hours}:${minutes}`;
+    }
   },
   layout: 'supplier',
 }

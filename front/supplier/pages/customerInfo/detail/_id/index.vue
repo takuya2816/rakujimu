@@ -83,9 +83,8 @@ export default {
     async getReservationList(customerId) {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-      // const data = {customerId: customerId}
-      // const res = await common.gateway_get(apiurl, data)  # TODO:customerIdで絞り込み
-      const res = await common.gateway_get(apiurl)
+      const data = {customerId: [customerId]}
+      const res = await common.gateway_get(apiurl, data)
       this.reservationList = res.Items
     },
 

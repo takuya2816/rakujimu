@@ -105,7 +105,3 @@ export default {
   margin-bottom: 10px;
 }
 </style>
-<<<<<<< HEAD:front/pages/customer/index.vue
-=======
-
->>>>>>> 1479d27019779a3a9e065ce3e9f6e0ebde8f2128:front/customer/pages/index.vue
