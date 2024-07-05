@@ -4,6 +4,7 @@ from datetime import datetime
 import json
 import decimal
 import requests
+# import pytz
 
 # DynamoDBオブジェクト
 dynamodb = boto3.resource('dynamodb')
@@ -14,12 +15,12 @@ class DecimalEncoder(json.JSONEncoder):
             return int(obj)
         return json.JSONEncoder.default(self, obj)
     
-def getReseavationList(customer_ids_to_query):
-    # TODO:equests.exceptions.HTTPError: 403 Client Error: Forbidden for url: https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetUserReservationList?customerId=47%2C1%2C49%2C0%2C48
-    api_url = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetUserReservationList'
-    api_params = {
-        'customerId': ','.join(map(str, customer_ids_to_query)),
-    }
+def getReseavationList(customerIds):
+    api_url = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
+    
+    data = json.dumps({'customerId': customerIds})
+    api_params = {'data': data}
+    
     api_response = requests.get(api_url, params=api_params)
     api_response.raise_for_status()  # HTTPエラーが発生した場合に例外をスロー
     return api_response.json().get('Items', [])
@@ -31,62 +32,70 @@ def lambda_handler(event, context):
         table = dynamodb.Table('CustomerMst')
 
         # パラメータを定義しておく
-        customer_ids = False
-        with_reserve_info = False
-        current_datetime = datetime.now().isoformat()
+        customerIds = False
+        withReserveInfo = False
         
         # レスポンスデータの内、customerIdに値がある場合絞り込みを行う
         data = event.get('queryStringParameters')
         if data:
             parsed_data = json.loads(data['data'])
-            customer_ids = parsed_data.get('customerId', False)
-            with_reserve_info = parsed_data.get('with_reserve_info', False)
+            customerIds = parsed_data.get('customerId', False)
+            withReserveInfo = parsed_data.get('withReserveInfo', False)
     
          # フィルター条件の初期化
-        filter_expression = None
+        filterExpression = None
     
         # フィルター条件の組み立て
-        if customer_ids:
-            customer_condition = Attr('id').is_in([int(cust_id) for cust_id in customer_ids])
-            filter_expression = customer_condition if filter_expression is None else filter_expression & customer_condition
+        if customerIds:
+            customer_condition = Attr('id').is_in([int(custId) for custId in customerIds])
+            filterExpression = customer_condition if filterExpression is None else filterExpression & customer_condition
     
         # スキャンを実行
-        if filter_expression is not None:
+        if filterExpression is not None:
             response = table.scan(
-                FilterExpression=filter_expression
+                FilterExpression=filterExpression
             )
             customerList = response['Items']
         else:
             response = table.scan()
             customerList = response['Items']
-        print(customerList)
     
     
-        # with_reserve_infoがTrueなら、最終来店日と来店予定日を計算
-        if with_reserve_info:
-            customer_ids_to_query = [item['id'] for item in customerList]
+        # withReserveInfoがTrueなら、最終来店日と来店予定日を計算
+        if withReserveInfo:
+            # jst = pytz.timezone('Asia/Tokyo')
+            # date_now = datetime.now(jst)
+            date_now = datetime.now()
             
-            # reservation_records = getReseavationList(customer_ids_to_query)  # TODO
-            reservation_records = []
+            customerIds = [int(item['id']) for item in customerList]
+            reservationList = getReseavationList(customerIds)
             
-            print(reservation_records)
-
             # 最終来店日と来店予定日を計算して追加
             for customer in customerList:
                 customer_id = customer['id']
+        
                 # 最終来店日
-                past_visits = [datetime.fromisoformat(item['supply_date']) for item in reservation_records if item['id'] == customer_id and datetime.fromisoformat(item['supply_date']) < datetime.now()]
+                past_visits = [(datetime.fromisoformat(item['reserve_date']), item['reserve_sttime']) for item in reservationList if int(item['customer_id']) == int(customer_id) and datetime.fromisoformat(item['reserve_date']) < date_now]
+                print(past_visits)
                 if past_visits:
-                    customer['last_visit_date'] = max(past_visits).isoformat()
+                    # 最大の日付を持つ予約日時と開始時間を取得
+                    last_reservation = max(past_visits, key=lambda x: x[0])
+                    customer['lastReservedDate'] = last_reservation[0].isoformat()
+                    customer['lastReservedSttime'] = last_reservation[1]
                 else:
-                    customer['last_visit_date'] = None
+                    customer['lastReservedDate'] = None
+                    customer['lastReservedSttime'] = None
 
                 # 来店予定日
-                future_visits = [datetime.fromisoformat(item['supply_date']) for item in reservation_records if item['id'] == customer_id and datetime.fromisoformat(item['supply_date']) >= datetime.now()]
+                future_visits = [(datetime.fromisoformat(item['reserve_date']), item['reserve_sttime']) for item in reservationList if int(item['customer_id']) == int(customer_id) and datetime.fromisoformat(item['reserve_date']) >= date_now]
                 if future_visits:
-                    customer['next_visit_date'] = min(future_visits).isoformat()
+                    print(future_visits)
+                    next_reservation = min(future_visits, key=lambda x: x[0])
+                    customer['nextReservedDate'] = next_reservation[0].isoformat()
+                    customer['nextReservedSttime'] = next_reservation[1]
                 else:
-                    customer['next_visit_date'] = None
+                    customer['nextReservedDate'] = None
+                    customer['nextReservedSttime'] = None
         print(customerList)
     
         # 結果を返す
