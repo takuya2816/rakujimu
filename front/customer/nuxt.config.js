@@ -46,7 +46,6 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
-    'bootstrap-vue/nuxt',
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
@@ -58,13 +57,4 @@ export default {
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {},
 
-  // localhostでhttpsを使う設定
-  // server: {
-  //   port: 3000,
-  //   host: "localhost",
-  //   https: {
-  //     key: fs.readFileSync(path.resolve(__dirname, "localhost-key.pem")),
-  //     cert: fs.readFileSync(path.resolve(__dirname, "localhost.pem"))
-  //   }
-  // }
 }
