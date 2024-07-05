@@ -113,19 +113,18 @@ def get_customer_id(lineid, seqtable):
 
 def cal_endtime(reserve_sttime, service_id):
     table = dynamodb.Table('ServiceMst')
-    # プライマリキーを使用してアイテムを取得
     response = table.get_item(
         Key={
-            id: service_id
+            'id': service_id
         }
     )
-    items = response.get('Items', [])
+    item = response.get('Item')
 
     reserve_sttime = datetime.strptime(reserve_sttime, "%H:%M")
-    service_term = datetime.strptime(items['term'], "%H:%M")
+    service_term = datetime.strptime(item['term'], "%H:%M")
     delta = timedelta(hours=service_term.hour, minutes=service_term.minute)
 
-    return reserve_sttime + delta
+    return (reserve_sttime + delta).strftime("%H:%M")
 
 # 既存の予約とかぶっていないことをチェック
 def check_reservable(reserve_id, reserve_date, reserve_sttime, reserve_endtime):
@@ -161,43 +160,54 @@ def lambda_handler(event, context):
         
         ## フォームに入力されたデータを得る
         param = json.loads(event['body'])
-        
-        #ユーザーID取得
-        try:
-            user_profile = get_profile(
-                param['idToken'], LIFF_CHANNEL_ID)
-            if 'error' in user_profile and 'expired' in user_profile['error_description']:  # noqa 501
-                return {
-                    'statusCode' : 403
-                }
-            else:
-                lineid = user_profile['sub']
-        except Exception:
-            logger.exception('不正なIDトークンが使用されています')
-            return {
-                'statusCode' : 403
-            }
+        param = param['params']['data']
 
         reserveDate = param['reserve_date']
         reserveSttime = param['reserve_sttime']
         employee = "" # param['employee']
-        serviceId = param['serviceId']
+        serviceId = param['service_id']
         approvalFlag = param['approval_flag']
         deleteFlag = param['delete_flag']
         memo = param['memo']
+
         
         # 現在の時刻を取得
         nowtime = time.time()
-        timestamp = str(datetime.datetime.fromtimestamp(nowtime))
+        timestamp = str(datetime.fromtimestamp(nowtime))
+        
+        # reserveEndtimeを算出
+        reserveEndtime = cal_endtime(reserveSttime, serviceId)
+
+        seqtable = dynamodb.Table('sequence')
+        if 'customer_id' in param:
+            customerId = param['customer_id']
+        else:
+            # customer_id が含まれていない場合は、line_id から取得
+            #ユーザーID取得
+            try:
+                user_profile = get_profile(
+                    param['idToken'], LIFF_CHANNEL_ID)
+                if 'error' in user_profile and 'expired' in user_profile['error_description']:  # noqa 501
+                    return {
+                        'statusCode' : 403
+                    }
+                else:
+                    lineid = user_profile['sub']
+            except Exception:
+                logger.exception('不正なIDトークンが使用されています')
+                return {
+                    'statusCode' : 403
+                }
+            customerId = get_customer_id(lineid, seqtable)            
 
         table = dynamodb.Table('ReservationList')
 
         # line_idとdatetimeで既存の予約を検索
         response = table.scan(
-            FilterExpression=Attr('line_id').eq(lineid) & Attr('reserve_date').eq(datetime)
+            FilterExpression=Attr('customer_id').eq(customerId) & Attr('reserve_date').eq(reserveDate)
         )
-
-        existing_item = response.get('Item')
+        
+        existing_item = response['Items'][0] if response['Items'] else None
 
         if existing_item:
             if deleteFlag:
@@ -228,8 +238,6 @@ def lambda_handler(event, context):
                 )
             else:
                 # 既存の予約を更新
-                # reserveEndtimeを算出
-                reserveEndtime = cal_endtime(reserveSttime, serviceId)
                 # 既存の予約とかぶっていないことを確認
                 if not check_reservable(existing_item['id'], reserveDate, reserveSttime, reserveEndtime):
                     return {
@@ -260,11 +268,7 @@ def lambda_handler(event, context):
                     },
                     ReturnValues="UPDATED_NEW"
                 )
-        else:
-            seqtable = dynamodb.Table('sequence')
-            # lineidからcustomerIdを取得
-            customerId = get_customer_id(lineid, seqtable)
-            
+        else:            
             # 新しい予約を作成
             nextseq = get_next_seq(seqtable, 'ReservationList')
             table.put_item(
