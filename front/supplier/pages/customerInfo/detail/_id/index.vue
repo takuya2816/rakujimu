@@ -38,7 +38,7 @@
       <div class="list-body">
         <div class="list-content">
           <div v-for="reservation in reservationList" :key="reservation.id" class="list-record">
-            <a :href="`/supplier/reservedInfo/detail/${reservation.id}`" class="reservation-link">
+            <a :href="`/reservedInfo/detail/${reservation.id}`" class="reservation-link">
               <div class="list-info">
                 <div class="list-item">{{ reservation.regist_datetime | datetime2date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
                 <div class="list-item">{{ reservation.reserve_date }}<br>{{ reservation.reserve_sttime | hhmmss2hhmm }}</div>
@@ -91,7 +91,7 @@ export default {
 
     editCustomerInfo(customerId) {
       // 編集ボタンが押されたときの処理
-      this.$router.push(`/supplier/customerInfo/detail/${this.$route.params.id}/edit`)
+      this.$router.push(`/customerInfo/detail/${this.$route.params.id}/edit`)
     },
   },
   filters: {

@@ -90,14 +90,14 @@ export default {
             const res = await common.gateway_post(apiurl, this.reservation)
             if (res && res.result === "ok") {
                 // 保存成功時の処理
-                this.$router.push(`/supplier/reservedInfo/detail/${this.$route.params.id}`)
+                this.$router.push(`/reservedInfo/detail/${this.$route.params.id}`)
             } else {
                 // エラー処理
                 alert('保存に失敗しました。')
             }
         },
         cancelReservation() {
-            this.$router.push(`/supplier/reservedInfo/detail/${this.$route.params.id}`)
+            this.$router.push(`/reservedInfo/detail/${this.$route.params.id}`)
         },
     },
 }

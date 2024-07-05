@@ -13,7 +13,7 @@
     <div class="list-body">
       <div class="list-content">
         <div v-for="customer in customerMst" :key="customer.id" class="list-record">
-          <a :href="`/supplier/customerInfo/detail/${customer.id}`" class="customer-link">
+          <a :href="`/customerInfo/detail/${customer.id}`" class="customer-link">
             <div class="list-info">
               <div class="list-item">{{ customer.name }}</div>
               <div class="list-item">{{ customer.gender }}</div>

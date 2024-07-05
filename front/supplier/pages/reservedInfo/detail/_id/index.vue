@@ -68,7 +68,7 @@ export default {
     
     editReservationInfo() {
       // 編集ボタンが押されたときの処理
-      this.$router.push(`/supplier/reservedInfo/detail/${this.$route.params.id}/edit`)
+      this.$router.push(`/reservedInfo/detail/${this.$route.params.id}/edit`)
     },
   },
   filters: {

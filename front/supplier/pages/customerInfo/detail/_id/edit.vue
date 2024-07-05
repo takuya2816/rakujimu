@@ -63,7 +63,7 @@ export default {
                 const res = await common.gateway_post(apiurl, this.customer)
                 if (res && res.result === "ok") {  // 厳密等価演算子を使用し、resが存在することを確認
                     // 成功時の処理
-                    this.$router.push(`/supplier/customerInfo/detail/${this.$route.params.id}`)
+                    this.$router.push(`/customerInfo/detail/${this.$route.params.id}`)
                 } else {
                     // レスポンスが期待通りでない場合の処理
                     console.error('Unexpected response:', res)
@@ -76,7 +76,7 @@ export default {
             }
         },
         cancelEdit() {
-            this.$router.push(`/supplier/customerInfo/detail/${this.$route.params.id}`)
+            this.$router.push(`/customerInfo/detail/${this.$route.params.id}`)
         }
     }
 }

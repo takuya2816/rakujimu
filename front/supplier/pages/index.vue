@@ -43,10 +43,10 @@ export default {
 
   methods: {
     GetCustomerList() {
-      this.$router.push('/supplier/customerInfo/list')
+      this.$router.push('/customerInfo/list')
     },
     GetReserveList() {
-      this.$router.push('/supplier/reservedInfo/list')
+      this.$router.push('/reservedInfo/list')
     },
   },
   // templateの選択
