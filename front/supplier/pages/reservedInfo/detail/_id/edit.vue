@@ -8,7 +8,9 @@
                 <div class="profile-info">
                     <div class="detail-item">
                         <span class="label">申込日時</span>
-                        <span class="value">{{ reservation.regist_datetime }}</span>
+                        <span class="value">{{ reservation.regist_datetime | datetime2date }} {{
+                            reservation.regist_datetime |
+                            datetime2hhmm }}</span>
                     </div>
                     <div class="detail-item">
                         <span class="label">氏名</span>
@@ -54,7 +56,13 @@ export default {
     layout: 'supplier',
     data() {
         return {
-            reservation: {},
+            reservation: {
+                regist_datetime: '',
+                customer_name: '',
+                service_id: '',
+                reserve_date: '',
+                reserve_sttime: ''
+            },
             servicelist: []
         }
     },
@@ -68,8 +76,12 @@ export default {
         //   .catch((error) => {
         //     this.liffError = error
         //   })
-        await this.getServiceList()
-        await this.getReservationInfo(this.$route.params.id)
+        try {
+            await this.getServiceList();
+            await this.getReservationInfo(this.$route.params.id);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
     },
     methods: {
         async getServiceList() {
@@ -78,10 +90,15 @@ export default {
             this.servicelist = res.Items
         },
         async getReservationInfo(reservationId) {
-            const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-            const data = { reservationId: [reservationId] }
-            const res = await common.gateway_get(apiurl, data)
-            this.reservation = res[0]  // リスト要素の1つ目を抽出
+            try {
+                const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
+                const data = { reservationId: [reservationId] }
+                const res = await common.gateway_get(apiurl, data)
+                this.reservation = res.Items[0]
+            } catch (error) {
+                console.error('Error fetching reservation info:', error);
+                // Todo:エラーメッセージを表示するなどの処理
+            }
         },
         async updateReservation() {
             try {
@@ -105,6 +122,24 @@ export default {
             this.$router.push(`/reservedInfo/detail/${this.$route.params.id}`)
         },
     },
+
+    filters: {
+        datetime2date(value) {
+            if (!value) return '';
+            const datetime = new Date(value);
+            const year = datetime.getFullYear();
+            const month = String(datetime.getMonth() + 1).padStart(2, '0');
+            const day = String(datetime.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        },
+        datetime2hhmm(value) {
+            if (!value) return '';
+            const date = new Date(value);
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        },
+    }
 }
 </script>
 

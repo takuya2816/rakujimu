@@ -5,15 +5,23 @@
       <h1>予約一覧</h1>
     </div>
     <div class="list-header">
-      <div class="list-header-item">申込日時</div>
-      <div class="list-header-item">予約日時</div>
-      <div class="list-header-item">氏名</div>
-      <div class="list-header-item">メニュー</div>
+      <div class="list-header-item clickable" @click="sortBy('regist_datetime')">
+        申込日時 <span v-if="sortKey === 'regist_datetime'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+      </div>
+      <div class="list-header-item clickable" @click="sortBy('reserve_date')">
+        予約日時 <span v-if="sortKey === 'reserve_date'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+      </div>
+      <div class="list-header-item clickable" @click="sortBy('customer_name')">
+        氏名 <span v-if="sortKey === 'customer_name'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+      </div>
+      <div class="list-header-item clickable" @click="sortBy('service_name')">
+        メニュー <span v-if="sortKey === 'service_name'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+      </div>
       <div class="list-header-item">     </div>
     </div>
     <div class="list-body">
       <div class="list-content">
-        <div v-for="reservation in reservationList" :key="reservation.id" class="list-record">
+        <div v-for="reservation in sortedReservations" :key="reservation.id" class="list-record">
           <a :href="`/reservedInfo/detail/${reservation.id}`" class="reservation-link">
             <div class="list-info">
               <div class="list-item">{{ reservation.regist_datetime | datetime2date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
@@ -25,6 +33,9 @@
           <a :href="`/approve/${reservation.id}`" class="reservation-approve">承認</a>
         </div>
       </div>
+    </div>
+    <div class="buttons">
+      <button class="edit-button" @click="returnIndex">戻る</button>
     </div>
   </div>
 </template>
@@ -46,6 +57,26 @@ export default {
       reservationList: [],
       customerMst:{},
       serviceMst:{},
+      sortKey: 'regist_datetime', // デフォルトのソートキー
+      sortOrder: 'desc' // デフォルトのソート順序
+    }
+  },
+  computed: {
+    sortedReservations() {
+      return [...this.reservationList].sort((a, b) => {
+        let aValue = a[this.sortKey];
+        let bValue = b[this.sortKey];
+        
+        // 日付型の場合、比較前に Date オブジェクトに変換
+        if (this.sortKey === 'regist_datetime' || this.sortKey === 'reserve_date') {
+          aValue = new Date(aValue);
+          bValue = new Date(bValue);
+        }
+        
+        if (aValue < bValue) return this.sortOrder === 'asc' ? -1 : 1;
+        if (aValue > bValue) return this.sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
     }
   },
   mounted() {
@@ -58,6 +89,19 @@ export default {
       const res = await common.gateway_get(apiurl)
       this.reservationList = res.Items
     },
+    returnIndex(){
+      this.$router.push(`/`)
+    },
+    sortBy(key) {
+      if (this.sortKey === key) {
+        // 同じキーでソートする場合は順序を反転
+        this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+      } else {
+        // 新しいキーでソートする場合は昇順から開始
+        this.sortKey = key;
+        this.sortOrder = 'asc';
+      }
+    }
   },
   filters: {
     datetime2date(value) {
@@ -86,6 +130,12 @@ export default {
 </script>
 
 <style>
+.clickable {
+  cursor: pointer;
+}
+.clickable:hover{
+  background-color: #f0f0f0;
+}
 .reservation-link {
   display: flex;
   flex-grow: 1;

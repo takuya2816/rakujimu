@@ -52,6 +52,7 @@
     </div>
     <div class="buttons">
       <button class="edit-button" @click="editCustomerInfo">編集</button>
+      <button class="return-button" @click="returnCustomerList">一覧へ戻る</button>
     </div>
   </div>
 </template> 
@@ -92,6 +93,10 @@ export default {
       // 編集ボタンが押されたときの処理
       this.$router.push(`/customerInfo/detail/${this.$route.params.id}/edit`)
     },
+    returnCustomerList(){
+      // 一覧へ戻るボタンが押されたときの処理
+      this.$router.push(`/customerInfo/list`)
+    }
   },
   filters: {
     datetime2date(value) {
