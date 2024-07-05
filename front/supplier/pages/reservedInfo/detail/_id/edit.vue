@@ -3,41 +3,45 @@
         <div class="title">
             <h1>予約編集</h1>
         </div>
-        <div class="details">
-            <div class="detail-item">
-                <span class="label">申込日時</span>
-                <span class="value">{{ reservation.regist_datetime }}</span>
-            </div>
-            <div class="detail-item">
-                <span class="label">氏名</span>
-                <span class="value"><input id="customer_name" v-model="reservation.customer_name" required></span>
-            </div>
-            <div class="detail-item">
-                <span class="label">メニュー</span>
-                <span class="value">
-                    <select id="service_name" v-model="reservation.service_name" required>
-                        <option v-for="item in servicelist" :key="item.id" :value="item.name">
-                            {{ item.name }}
-                        </option>
-                    </select>
-                </span>
-            </div>
-            <div class="detail-item">
-                <span class="label">予約日</span>
-                <span class="value">
-                    <input id="reserveDate" v-model="reservation.reserve_date" type="date" required>
-                </span>
-            </div>
-            <div class="detail-item">
-                <span class="label">予約時間</span>
-                <span class="value">
-                    <input id="reserveTime" v-model="reservation.reserve_sttime" type="time" required>
-                </span>
-            </div>
-            <div class="buttons">
-                <button class="post-button" @click="updateReservation">更新</button>
-                <!-- <button @click="return" class="back-button">戻る</button> -->
-                <button class="cancel-button" @click="cancelReservation">キャンセル</button>
+        <div class="reservation-edit">
+            <div class="profile">
+                <div class="profile-info">
+                    <div class="detail-item">
+                        <span class="label">申込日時</span>
+                        <span class="value">{{ reservation.regist_datetime }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">氏名</span>
+                        <span class="value"><input id="customer_name" v-model="reservation.customer_name"
+                                required></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">メニュー</span>
+                        <span class="value">
+                            <select id="service_name" v-model="reservation.service_id" required>
+                                <option v-for="item in servicelist" :key="item.id" :value="item.id">
+                                    {{ item.name }}
+                                </option>
+                            </select>
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">予約日</span>
+                        <span class="value">
+                            <input id="reserveDate" v-model="reservation.reserve_date" type="date" required>
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">予約時間</span>
+                        <span class="value">
+                            <input id="reserveTime" v-model="reservation.reserve_sttime" type="time" required>
+                        </span>
+                    </div>
+                    <div class="buttons">
+                        <button class="post-button" @click="updateReservation">更新</button>
+                        <button class="cancel-button" @click="returnReservationDetail">キャンセル</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -50,13 +54,7 @@ export default {
     layout: 'supplier',
     data() {
         return {
-            reservation: {
-                customer_name: '',
-                service_name: '',
-                reserve_date: '',
-                reserve_sttime: '',
-                regist_datetime: ''
-            },
+            reservation: {},
             servicelist: []
         }
     },
@@ -83,20 +81,27 @@ export default {
             const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
             const data = { reservationId: [reservationId] }
             const res = await common.gateway_get(apiurl, data)
-            this.reservation = res.Items[0]  // リスト要素の1つ目を抽出
+            this.reservation = res[0]  // リスト要素の1つ目を抽出
         },
         async updateReservation() {
-            const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
-            const res = await common.gateway_post(apiurl, this.reservation)
-            if (res && res.result === "ok") {
-                // 保存成功時の処理
-                this.$router.push(`/reservedInfo/detail/${this.$route.params.id}`)
-            } else {
-                // エラー処理
-                alert('保存に失敗しました。')
+            try {
+                const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
+                const res = await common.gateway_post(apiurl, this.reservation)
+                if (res && res.result === "ok") {
+                    // 保存成功時の処理
+                    this.$router.push(`/reservedInfo/detail/${this.$route.params.id}`)
+                } else {
+                    // レスポンスが期待通りでない場合の処理
+                    console.error('Unexpected response:', res)
+                    alert('保存に失敗しました。予期せぬレスポンスを受け取りました。')
+                }
+            } catch (error) {
+                // エラーハンドリング
+                console.error('Error updating reservation:', error)
+                alert('保存中にエラーが発生しました: ' + error.message)
             }
         },
-        cancelReservation() {
+        returnReservationDetail() {
             this.$router.push(`/reservedInfo/detail/${this.$route.params.id}`)
         },
     },
@@ -104,8 +109,16 @@ export default {
 </script>
 
 <style scoped>
-.details {
-    margin-bottom: 20px;
+.reservation-edit {
+    background-color: #f0f0f0;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.profile-info {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
 }
 
 .detail-item {
