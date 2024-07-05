@@ -83,7 +83,7 @@ export default {
       this.servicelist = res.Items
     },
     reserve() {
-      this.$router.push({path: '/customer/selectdate/', 
+      this.$router.push({path: '/selectdate/', 
                          query: {
                               accessToken: this.accessToken,
                               fullname: this.fullname,
@@ -105,4 +105,3 @@ export default {
   margin-bottom: 10px;
 }
 </style>
-
