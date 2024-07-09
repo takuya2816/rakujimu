@@ -24,7 +24,7 @@ def lambda_handler(event, context):
             "headers": {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'GET',
+                'Access-Control-Allow-Methods': 'PGET',
                 'Access-Control-Allow-Origin': '*'
             },
             "body": json.dumps(response, cls=DecimalEncoder)

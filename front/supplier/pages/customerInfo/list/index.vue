@@ -23,8 +23,8 @@
             <div class="list-info">
               <div class="list-item">{{ customer.name }}</div>
               <div class="list-item">{{ customer.gender }}</div>
-              <div class="list-item">{{ customer.lastReservedDate | datetime2date }}<br>{{ customer.lastReservedSttime }}</div>
-              <div class="list-item">{{ customer.nextReservedDate | datetime2date }}<br>{{ customer.nextReservedSttime }}</div>
+              <div class="list-item">{{ customer.last_reserved_date | datetime2date }}<br>{{ customer.last_reserved_sttime }}</div>
+              <div class="list-item">{{ customer.next_reserved_date | datetime2date }}<br>{{ customer.next_reserved_sttime }}</div>
             </div>
           </a>
         </div>
@@ -85,7 +85,7 @@ export default {
         let bValue = b[this.sortKey];
         
         // 日付型の場合、比較前に Date オブジェクトに変換
-        if (this.sortKey === 'lastReservedDate' || this.sortKey === 'nextReservedDate') {
+        if (this.sortKey === 'last_reserved_date' || this.sortKey === 'next_reserved_date') {
           aValue = aValue ? new Date(aValue) : new Date(0);
           bValue = bValue ? new Date(bValue) : new Date(0);
         }

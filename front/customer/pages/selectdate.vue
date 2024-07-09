@@ -78,7 +78,7 @@ export default {
       birthday: this.$route.query.birthday,
       gender: this.$route.query.gender,
       tel: this.$route.query.tel,
-      serviceId: this.$route.query.serviceId,
+      serviceId: this.$route.query.service_id,
       reserveStDatetime: '', // 20240214 11:15の形
     }
   },
@@ -93,7 +93,6 @@ export default {
       })
     this.getTimeList('11:00', '20:00', 15); // 営業時間、予約可能間隔の設定
     this.getDayList(new Date());
-    this.getTimeList('11:00', '20:00', 15);
     this.getReservableDict();
   },
 
@@ -183,34 +182,33 @@ export default {
 
     async getReservableDict() {
       // 初日のみを投げる
-      const apiurl =
+      var apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservableList'
-      const data = {
-        display_days: this.display_days,
-        serviceId: this.serviceId,
+        var data = {
+        first_day_of_week: this.display_days[0], 
+        service_id: this.serviceId
       };
-      const response = await common.gateway_get(apiurl, data); // {20240214:[11:15,11:30,...], 20240215:[]}の形
-      this.reservable_dict = response.reservable_dict;
+      var response = await common.gateway_get(apiurl, data);
+      this.reservable_dict = response.reservable_dict;  // {20240214:[11:15,11:30,...], 20240215:[]}の形
     },
     async postForm() {
       // ReservationListに送信
       var apiurl =
-        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList';
+        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
       var data = {
-        idToken: this.idToken,
+        id_token: this.idToken,
         name: this.name,
         birthday: this.birthday,
         gender: this.gender,
         tel: this.tel,
-        serviceId: this.serviceId,
-        approvalFlag: false,
-        deleteFlag: false,
+        service_id: this.serviceId,
+        approval_flag: false,
+        delete_flag: false,
         memo: "",
-        reserveStDatetime: this.reserveStDatetime, //"20240214 11:15"の形
+        reserve_st_datetime: this.reserveStDatetime, //"20240214 11:15"の形
       };
-      console.log('data completed');
       common.gateway_post(apiurl, data);
-      this.$router.push({path: '/reserved/', query: data});
+      this.$router.push({path: '/reserved', query: data});
     },
   },
   // templateの選択

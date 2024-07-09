@@ -25,14 +25,17 @@ def lambda_handler(event, context):
     try:
         param = json.loads(event['body'])
         print(param)
-        customerId = param['id']
+        customerId = param.get('id')  # 顧客側からの申込はこちら, TODO:リクエスト方法を合わせたい
+        if not customerId:
+            param = param['params']['data']  # 承認の場合はこちら
+            customerId = param['id']
         
         
         # idから項目検索
         table = dynamodb.Table('CustomerMst')
         response = table.get_item(
             Key={
-                'id': customerId
+                'id': int(customerId)
             }
         )
         
@@ -40,7 +43,7 @@ def lambda_handler(event, context):
         
         name = param['name']
         address = param.get('address', 'None')
-        lineId = param.get('lineId', 'None')
+        lineId = param.get('line_id', 'None')
         gender = param['gender']
         tel = str(param['tel'])
         birthday = param['birthday']

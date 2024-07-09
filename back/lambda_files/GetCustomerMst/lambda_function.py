@@ -18,7 +18,7 @@ class DecimalEncoder(json.JSONEncoder):
 def getReseavationList(customerIds):
     api_url = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
     
-    data = json.dumps({'customerId': customerIds})
+    data = json.dumps({'customer_id': customerIds})
     api_params = {'data': data}
     
     api_response = requests.get(api_url, params=api_params)
@@ -39,7 +39,7 @@ def lambda_handler(event, context):
         data = event.get('queryStringParameters')
         if data:
             parsed_data = json.loads(data['data'])
-            customerIds = parsed_data.get('customerId', False)
+            customerIds = parsed_data.get('customer_id', False)
             withReserveInfo = parsed_data.get('withReserveInfo', False)
     
          # フィルター条件の初期化
@@ -80,22 +80,22 @@ def lambda_handler(event, context):
                 if past_visits:
                     # 最大の日付を持つ予約日時と開始時間を取得
                     last_reservation = max(past_visits, key=lambda x: x[0])
-                    customer['lastReservedDate'] = last_reservation[0].isoformat()
-                    customer['lastReservedSttime'] = last_reservation[1]
+                    customer['last_reserved_date'] = last_reservation[0].isoformat()
+                    customer['last_reserved_sttime'] = last_reservation[1]
                 else:
-                    customer['lastReservedDate'] = None
-                    customer['lastReservedSttime'] = None
+                    customer['last_reserved_date'] = None
+                    customer['last_reserved_sttime'] = None
 
                 # 来店予定日
                 future_visits = [(datetime.fromisoformat(item['reserve_date']), item['reserve_sttime']) for item in reservationList if int(item['customer_id']) == int(customer_id) and datetime.fromisoformat(item['reserve_date']) >= date_now]
                 if future_visits:
                     print(future_visits)
                     next_reservation = min(future_visits, key=lambda x: x[0])
-                    customer['nextReservedDate'] = next_reservation[0].isoformat()
-                    customer['nextReservedSttime'] = next_reservation[1]
+                    customer['next_reserved_date'] = next_reservation[0].isoformat()
+                    customer['next_reserved_sttime'] = next_reservation[1]
                 else:
-                    customer['nextReservedDate'] = None
-                    customer['nextReservedSttime'] = None
+                    customer['next_reserved_date'] = None
+                    customer['next_reserved_sttime'] = None
         print(customerList)
     
         # 結果を返す

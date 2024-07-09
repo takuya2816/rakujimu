@@ -30,7 +30,7 @@
               <div class="list-item">{{ reservation.service_name }}</div>
             </div>
           </a>
-          <a :href="`/approve/${reservation.id}`" class="reservation-approve">承認</a>
+          <button v-if="reservation.approval_flag === 'false'" @click="approveReservation(reservation)" class="reservation-approve">承認</button>
         </div>
       </div>
     </div>
@@ -53,6 +53,16 @@ export default {
       sortOrder: 'desc' // デフォルトのソート順序
     }
   },
+  mounted() {
+    this.$liffInit
+    .then(() => {
+      this.idToken = liff.getIDToken();
+    })
+    .catch((error) => {
+      this.liffError = error
+    })
+    this.getReservationList();
+  },
   computed: {
     sortedReservations() {
       return [...this.reservationList].sort((a, b) => {
@@ -71,22 +81,43 @@ export default {
       });
     }
   },
-  mounted() {
-    this.$liffInit
-      .then(() => {
-        this.idToken = liff.getIDToken();
-      })
-      .catch((error) => {
-        this.liffError = error
-      })
-    this.getReservationList();
-  },
   methods:{
     async getReservationList(){  // getCustomerMst, serviceMstから名前を引用したリストを取得
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
       const res = await common.gateway_get(apiurl)
       this.reservationList = res.Items
+    },
+    async approveReservation(reservation) {
+      // 承認ボタンが押されたときの処理
+      try {
+        reservation.approval_flag = "true"
+        var apiurl =
+          'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
+        var data = {
+          id: reservation.id,
+          customer_name: reservation.customer_name, 
+          service_id: reservation.service_id, 
+          reserve_date: reservation.reserve_date,
+          reserve_sttime: reservation.reserve_sttime, 
+          approval_flag: reservation.approval_flag,
+          delete_flag: "false",
+        };
+        console.log(JSON.stringify(data))
+        var res = await common.gateway_post(apiurl, data)  // TODO:リクエストクエリに含めたいがparamsでかえってきてしまう
+        if (res && res.result === "ok") {
+          // 承認成功時の処理
+          this.$router.push(`/reservedInfo/list`)
+        } else {
+          // レスポンスが期待通りでない場合の処理
+          console.error('Unexpected response:', res)
+          alert('承認に失敗しました。予期せぬレスポンスを受け取りました。')
+        }
+      } catch (error) {
+        // エラーハンドリング
+        console.error('Error saving customer info:', error)
+        alert('保存中にエラーが発生しました。')
+      }
     },
     returnIndex(){
       this.$router.push(`/`)

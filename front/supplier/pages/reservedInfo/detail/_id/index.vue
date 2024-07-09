@@ -8,8 +8,7 @@
     <div class="details">
       <div class="detail-item">
         <span class="label">申込日時</span>
-        <span class="value">{{ reservation.regist_datetime | datetime2date }} {{ reservation.regist_datetime |
-          datetime2hhmm }}</span>
+        <span class="value">{{ datetime2date(reservation.regist_datetime) }} {{ datetime2hhmm(reservation.regist_datetime) }}</span>
       </div>
       <div class="detail-item">
         <span class="label">氏名</span>
@@ -21,18 +20,17 @@
       </div>
       <div class="detail-item">
         <span class="label">予約開始日時</span>
-        <span class="value">{{ reservation.reserve_date }} {{ reservation.reserve_sttime | hhmmss2hhmm }}</span>
+        <span class="value">{{ reservation.reserve_date }} {{ hhmmss2hhmm(reservation.reserve_sttime) }}</span>
       </div>
       <div class="detail-item">
         <span class="label">承認日時</span>
-        <span class="value">{{ reservation.approval_flag == "true" ? reservation.approval_flag :'-' }}</span>
+        <span class="value">{{ reservation.approval_flag == "true" ? datetime2date(reservation.approval_datetime)+" "+datetime2hhmm(reservation.approval_datetime) : '-' }}</span>
       </div>
     </div>
     <div>
       <div class="buttons">
         <button class="edit-button" @click="editReservationInfo">編集</button>
         <button v-if="reservation.approval_flag === 'false'" @click="approveReservation" class="post-button">承認</button>
-        <button class="post-button" @click="removeReservation">削除</button>
         <button class="post-button" @click="returnReservationList">一覧へ戻る</button>
       </div>
     </div>
@@ -56,22 +54,31 @@ export default {
       // 仮のAPIコールを実行し、予約情報を取得
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-      const data = { reservationId: [reservationId] }
+      const data = { reservation_id: [reservationId] }
       const res = await common.gateway_get(apiurl, data)
       this.reservation = res.Items[0]  // リスト要素の1つ目を抽出
     },
 
-    async approveReservation(reservation) {
+    async approveReservation() {
       // 承認ボタンが押されたときの処理
-      reservation.approval_flag = "true"
       try {
-        const apiurl =
+        this.reservation.approval_flag = "true"
+        var apiurl =
           'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
-        const data = { reservation }
-        const res = await common.gateway_get(apiurl, data)
+        var data = {
+          id: this.reservation.id,
+          customer_name: this.reservation.customer_name, 
+          service_id: this.reservation.service_id, 
+          reserve_date: this.reservation.reserve_date,
+          reserve_sttime: this.reservation.reserve_sttime, 
+          approval_flag: this.reservation.approval_flag,
+          delete_flag: "false",
+        };
+        console.log(JSON.stringify(data))
+        var res = await common.gateway_post(apiurl, data)  // TODO:リクエストクエリに含めたいがparamsでかえってきてしまう
         if (res && res.result === "ok") {
           // 承認成功時の処理
-          this.$router.push(`/reservedInfo/detail/${this.$route.params.id}`)
+          this.$router.push(`/reservedInfo/list`)
         } else {
           // レスポンスが期待通りでない場合の処理
           console.error('Unexpected response:', res)
@@ -88,35 +95,10 @@ export default {
       // 編集ボタンが押されたときの処理
       this.$router.push(`/reservedInfo/detail/${this.$route.params.id}/edit`)
     },
-
-    async removeReservation(reservation) {
-      reservation.delete_flag = "true"
-      try {
-        const apiurl =
-          'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
-        const data = { reservation }
-        const res = await common.gateway_get(apiurl, data)
-        if (res && res.result === "ok") {
-          // 承認成功時の処理
-          this.$router.push(`/reservedInfo/detail/${this.$route.params.id}`)
-        } else {
-          // レスポンスが期待通りでない場合の処理
-          console.error('Unexpected response:', res)
-          alert('承認に失敗しました。予期せぬレスポンスを受け取りました。')
-        }
-      } catch (error) {
-        // エラーハンドリング
-        console.error('Error saving customer info:', error)
-        alert('保存中にエラーが発生しました。')
-      }
-    },
-
     returnReservationList() {
       // 一覧へ戻るボタンが押されたときの処理
       this.$router.push(`/reservedInfo/list`)
     },
-  },
-  filters: {
     datetime2date(value) {
       if (!value) return '';
       const datetime = new Date(value);

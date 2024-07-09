@@ -14,8 +14,7 @@
                     </div>
                     <div class="detail-item">
                         <span class="label">氏名</span>
-                        <span class="value"><input id="customer_name" v-model="reservation.customer_name"
-                                required></span>
+                        <span class="value">{{ reservation.customer_name }}</span>
                     </div>
                     <div class="detail-item">
                         <span class="label">メニュー</span>
@@ -42,6 +41,7 @@
                     <div class="buttons">
                         <button class="post-button" @click="updateReservation">更新</button>
                         <button class="cancel-button" @click="returnReservationDetail">キャンセル</button>
+                        <button class="post-button" @click="removeReservation">削除</button>
                     </div>
                 </div>
             </div>
@@ -56,13 +56,7 @@ export default {
     layout: 'supplier',
     data() {
         return {
-            reservation: {
-                regist_datetime: '',
-                customer_name: '',
-                service_id: '',
-                reserve_date: '',
-                reserve_sttime: ''
-            },
+            reservation: {regist_datetime: '', customer_name: '', service_id: '', reserve_date: '', reserve_sttime: '', id: ''},
             servicelist: []
         }
     },
@@ -91,12 +85,11 @@ export default {
         async getReservationInfo(reservationId) {
             try {
                 const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-                const data = { reservationId: [reservationId] }
+                const data = { reservation_id: [reservationId] }
                 const res = await common.gateway_get(apiurl, data)
                 this.reservation = res.Items[0]
             } catch (error) {
                 console.error('Error fetching reservation info:', error);
-                // Todo:エラーメッセージを表示するなどの処理
             }
         },
         async updateReservation() {
@@ -115,6 +108,26 @@ export default {
                 // エラーハンドリング
                 console.error('Error updating reservation:', error)
                 alert('保存中にエラーが発生しました: ' + error.message)
+            }
+        },
+        async removeReservation(reservation) {
+            this.reservation.delete_flag = "true"
+            try {
+                const apiurl =
+                'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
+                const res = await common.gateway_post(apiurl, this.reservation)
+                if (res && res.result === "ok") {
+                // 承認成功時の処理
+                this.$router.push(`/reservedInfo/list`)
+                } else {
+                // レスポンスが期待通りでない場合の処理
+                console.error('Unexpected response:', res)
+                alert('承認に失敗しました。予期せぬレスポンスを受け取りました。')
+                }
+            } catch (error) {
+                // エラーハンドリング
+                console.error('Error saving customer info:', error)
+                alert('保存中にエラーが発生しました。')
             }
         },
         returnReservationDetail() {

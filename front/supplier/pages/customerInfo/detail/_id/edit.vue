@@ -52,13 +52,12 @@ export default {
         async getCustomerMst(customerId) {
             const apiurl =
                 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
-            const data = { customerId: [customerId] }
+            const data = { customer_id: [customerId] }
             const res = await common.gateway_get(apiurl, data)
             this.customer = res[0]
         },
         async saveCustomerInfo() {
             try {
-                console.log(this.customer)
                 const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistCustomerMst'
                 const res = await common.gateway_post(apiurl, this.customer)
                 if (res && res.result === "ok") {  // 厳密等価演算子を使用し、resが存在することを確認
