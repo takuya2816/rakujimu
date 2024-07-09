@@ -175,12 +175,13 @@ def get_reserved_list(display_days, time_iter):  # ->{"20240130": ["11:00","12:0
     response = table.scan()
     reserved_datetime_list = response.get('Items', [])
     
-    # 空き日時を探す
     for display_day in display_days:  # Mon~Sunで繰り返し
         times_list = []
-        target_dayofweek:str = datetime.datetime.strptime(display_day, '%Y%m%d').strftime('%A')
+        target_date = datetime.datetime.strptime(display_day, '%Y%m%d')
         for reserved_datetime_row in reserved_datetime_list:
-            if reserved_datetime_row['reserve_date'] == target_dayofweek:
+            reserve_date = datetime.datetime.strptime(reserved_datetime_row['reserve_date'], "%Y-%m-%d")
+            reserve_date = reserve_date.strftime("%Y%m%d")
+            if reserve_date == display_day:
                 sttime = reserved_datetime_row["reserve_sttime"]
                 endtime = reserved_datetime_row["reserve_endtime"]
                 times_list.extend(get_time_intervals(sttime, endtime, time_iter))
@@ -247,7 +248,7 @@ def get_available_slots(reservable_dict, service_term, time_tier):
             # 利用可能な場合、スロットを追加
             if is_available:
                 available_slots[date].append(slot)
-
+    
     return available_slots
     
 def lambda_handler(event, context):
@@ -310,8 +311,6 @@ def lambda_handler(event, context):
         parsed_data = json.loads(data['data'])
         display_days = parsed_data['display_days']
         serviceId = parsed_data['serviceId']
-        print(display_days)
-        print(serviceId)        
         
         # 各テーブルから全データを参照する。
         opening_hour_dict = get_opening_hour(display_days, time_iter)

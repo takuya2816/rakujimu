@@ -48,7 +48,7 @@
 
 <script>
 import axios from 'axios'
-import Common from '@/plugins/common'
+import common from '@/plugins/common'
 
 export default {
   data() {
@@ -77,7 +77,7 @@ export default {
     async getServiceList() {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetServiceMst';
-      const res = await Common.gateway_get(apiurl);
+      const res = await common.gateway_get(apiurl);
       this.servicelist = res.Items;
     },
     reserve() {

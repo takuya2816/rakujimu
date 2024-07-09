@@ -24,13 +24,13 @@
       </div>
       <div class="detail-item">
         <span class="label">承認日時</span>
-        <span class="value">{{ reservation.approval_flag || 'ー' }}</span>
+        <span class="value">{{ reservation.approval_flag == "true" ? reservation.approval_flag :'-' }}</span>
       </div>
     </div>
     <div>
       <div class="buttons">
         <button @click="editReservationInfo" class="edit-button">編集</button>
-        <button @click="approveReservation" class="post-button">承認</button>
+        <button v-if="reservation.approval_flag === 'false'" @click="approveReservation" class="post-button">承認</button>
       </div>
     </div>
   </div>

@@ -7,7 +7,7 @@ export default {
     async gateway_get(apiurl, data){
         if (data) {
             try {
-                const response = await axios.get(apiurl,{params:{data}});
+                const response = await axios.get(apiurl,{params:{data}});  // クエリパラメタ
                 console.log(response);
                 return response.data;
             } catch (error) {
@@ -24,7 +24,7 @@ export default {
     },
     async gateway_post(apiurl, data){
         try {
-            const response = await axios.post(apiurl, {params:{data}});
+            const response = await axios.post(apiurl, data);  // リクエストボディ
             console.log(response);
             return response.data;
         } catch (error) {
