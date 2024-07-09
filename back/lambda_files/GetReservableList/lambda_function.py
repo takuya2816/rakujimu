@@ -13,6 +13,14 @@ class DecimalEncoder(json.JSONEncoder):
             return int(obj)
         return json.JSONEncoder.default(self, obj)
         
+def get_week_dates(start_monday_str):
+    # 入力の日付文字列をdatetimeオブジェクトに変換
+    start_monday = datetime.datetime.strptime(start_monday_str, '%Y%m%d')
+    
+    # 月曜日から日曜日までの日付リストを作成
+    week_dates = [(start_monday + timedelta(days=i)).strftime('%Y%m%d') for i in range(7)]
+    return week_dates
+
 def get_time_intervals(start_time, end_time, time_iter):
     """
     営業開始時間から営業終了時間までの時間間隔リストを生成する関数
@@ -47,7 +55,6 @@ def get_time_intervals(start_time, end_time, time_iter):
         time_intervals.append(current.strftime("%H:%M"))
         current += timedelta(minutes=time_iter)
     return time_intervals
-
 
 def get_opening_hour(display_days, time_iter):  # ->{"20240130": ["11:00","12:00"],...}
     """
@@ -86,14 +93,14 @@ def get_opening_hour(display_days, time_iter):  # ->{"20240130": ["11:00","12:00
     table = dynamodb.Table('OpeningHourMst')
     response = table.scan()
     
-    dayofweek_list = response['Items']  # {"id", "dayofweek", "BusinessStartTime", "BusinessEndTime"}のリスト
+    dayofweek_list = response['Items']  # {"id", "day_of_week", "business_start_time", "business_end_time"}のリスト
     times_list = []
     for display_day in display_days:  # Mon~Sunで繰り返し
         target_dayofweek:str = datetime.datetime.strptime(display_day, '%Y%m%d').strftime('%A')
         for dayofweek_row in dayofweek_list:
-            if dayofweek_row["dayofweek"] == target_dayofweek:  # Mondayなどの文字列で一致したら
-                sttime = dayofweek_row["BusinessStartTime"]
-                endtime = dayofweek_row["BusinessEndTime"]
+            if dayofweek_row["day_of_week"] == target_dayofweek:  # Mondayなどの文字列で一致したら
+                sttime = dayofweek_row["business_start_time"]
+                endtime = dayofweek_row["business_end_time"]
                 times_list = get_time_intervals(sttime, endtime, time_iter)
         opening_hour_dict[display_day] = times_list
     return opening_hour_dict
@@ -308,9 +315,11 @@ def lambda_handler(event, context):
         
         # 表示させる週初日(月曜日)と予約するサービス名の情報を取得
         data = event.get('queryStringParameters')  # ["20240130", "20240131", "20240201"...]
-        parsed_data = json.loads(data['data'])
-        display_days = parsed_data['display_days']
-        serviceId = parsed_data['serviceId']
+        print(data)
+        parsed_data = data
+        firstDayOfWeek= parsed_data['first_day_of_week']
+        serviceId = parsed_data['service_id']
+        display_days = get_week_dates(firstDayOfWeek)
         
         # 各テーブルから全データを参照する。
         opening_hour_dict = get_opening_hour(display_days, time_iter)

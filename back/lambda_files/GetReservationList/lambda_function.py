@@ -19,32 +19,32 @@ def lambda_handler(event, context):
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table('ReservationList')
         
-        reservation_ids = False
-        customer_ids = False
-        reserved_flg = False
-        reserving_flg = False
+        reservationIds = False
+        customerIds = False
+        reservedFlag = False
+        reservingFlag = False
         
         data = event.get('queryStringParameters', False)
         if data:  # リクエストパラメータがある場合はレコードを絞り込む
             parsed_data = json.loads(data['data'])
-            reservation_ids = parsed_data.get('reservationId', False)
-            customer_ids = parsed_data.get('customerId', False)
-            # reserved_flg = parsed_data.get('reservedFlg', False)
-            # reserving_flg = parsed_data.get('reservingFlg', False)
+            reservationIds = parsed_data.get('reservation_id', False)
+            customerIds = parsed_data.get('customer_id', False)
+            # reservedFlag = parsed_data.get('reserved_flag', False)
+            # reservingFlag = parsed_data.get('reserving_flag', False)
 
         # フィルター条件の初期化
-        filter_expression = Attr('delete_flag').eq("false")  # stringでの対応
+        filter_expression = Attr('delete_flag').eq("false")  # stringでの
         current_datetime = datetime.now().isoformat()
         
         # print(f"reserved_flg:{reserved_flg}")  # テスト
         # print(f"reserving_flg:{reserving_flg}")  # テスト
 
         # フィルター条件の組み立て
-        if reservation_ids is not False:
-            reservation_condition = Attr('id').is_in([int(res_id) for res_id in reservation_ids])
+        if reservationIds is not False:
+            reservation_condition = Attr('id').is_in([int(res_id) for res_id in reservationIds])
             filter_expression = filter_expression & reservation_condition if filter_expression else reservation_condition
-        if customer_ids is not False:
-            customer_condition = Attr('customer_id').is_in([int(cust_id) for cust_id in customer_ids])
+        if customerIds is not False:
+            customer_condition = Attr('customer_id').is_in([int(cust_id) for cust_id in customerIds])
             filter_expression = filter_expression & customer_condition if filter_expression else customer_condition
         # if reserved_flg:
         #     reserved_condition = Attr('reserved_flg').eq(reserved_flg) & Attr('reserve_date').lt(current_datetime)
@@ -69,15 +69,16 @@ def lambda_handler(event, context):
         customerMst = table.scan()
         table = dynamodb.Table('ServiceMst')
         serviceMst = table.scan()
+        print(serviceMst)
 
         # CustomerMst, ServiceMst テーブルの情報を付与
         for reservation in reservationList['Items']:
             for customer in customerMst['Items']:
-                if reservation['customer_id'] == customer['id']:
+                if int(reservation['customer_id']) == int(customer['id']):
                     reservation['customer_name'] = customer['name']
                     break
             for service in serviceMst['Items']:
-                if reservation['service_id'] == service['id']:
+                if int(reservation['service_id']) == int(service['id']):
                     reservation['service_name'] = service['name']
                     break
             

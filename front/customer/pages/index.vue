@@ -87,7 +87,7 @@ export default {
                               birthday: this.birthday,
                               gender: this.gender,
                               tel: this.tel,
-                              serviceId: this.serviceId
+                              service_id: this.serviceId
                           }
                         });
     },

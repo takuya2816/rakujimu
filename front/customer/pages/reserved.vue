@@ -32,18 +32,20 @@
 import common from '@/plugins/common'
 export default {
   data() {
+    console.log(this.$route.query);
     return {
       name: this.$route.query.name,
       birthday: this.$route.query.birthday,
       gender: this.$route.query.gender,
       tel: this.$route.query.tel,
-      serviceId: this.$route.query.serviceId,
-      reserveStDatetime: this.$route.query.reserveStDatetime,
+      serviceId: this.$route.query.service_id,
+      reserveStDatetime: this.$route.query.reserve_st_datetime,
       serviceName: "",
     }
   },
   mounted() {
     this.getServiceList();
+    console.log(this.gender);
   },
   methods: {
     async getServiceList() {
