@@ -38,23 +38,32 @@ export default {
 
   // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
   buildModules: [
-    // https://go.nuxtjs.dev/eslint
     '@nuxtjs/eslint-module',
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
-    // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: '/',
+    baseURL: 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/',
   },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {},
 
+  env: {
+    LIFF_ID: process.env.LIFF_ID,
+  },
+
+  server: {
+    port: 3000,
+    host: "localhost",
+    https: {
+      key: fs.readFileSync(path.resolve(__dirname, "../localhost-key.pem")),
+      cert: fs.readFileSync(path.resolve(__dirname, "../localhost.pem"))
+    },
+  },
 }

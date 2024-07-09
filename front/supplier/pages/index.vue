@@ -26,19 +26,18 @@ export default {
   // ],
   data() {
     return {
-      accessToken: '',
       menulist: '',
     }
   },
   mounted() {
     // 開発のためLIFFコメントアウト
-    // this.$liffInit
-    //   .then(() => {
-    //     pass
-    //   })
-    //   .catch((error) => {
-    //     this.liffError = error
-    //   })
+    this.$liffInit
+      .then(() => {
+        pass
+      })
+      .catch((error) => {
+        this.liffError = error
+      })
   },
 
   methods: {

@@ -12,10 +12,10 @@
         ※送信時にサービス規約に同意したものとみなします
       </p>
     </div>
-    <form class="contactForm">
+    <form class="contactForm" @submit.prevent="reserve">
       <div class="form-group">
-        <label for="fullname">■お名前</label>
-        <input type="text" id="fullname" v-model="fullname" required />
+        <label for="name">■お名前</label>
+        <input type="text" id="name" v-model="name" required />
       </div>
       <div class="form-group">
         <label for="birthday">■生年月日</label>
@@ -35,13 +35,13 @@
       </div>
       <div class="form-group">
         <label for="service">■メニュー</label>
-        <select id="service" name="service" required>
-          <option v-for="item in servicelist" :key="item.id" :value="item.name">
+        <select id="service" v-model="serviceId" required>
+          <option v-for="item in servicelist" :key="item.id" :value="item.id">
             {{ item.name }}
           </option>
         </select>
       </div>
-      <button class="send" @click="reserve">日時選択へ</button>
+      <button type="submit" class="send">日時選択へ</button>
     </form>
   </div>
 </template>
@@ -54,45 +54,42 @@ export default {
   data() {
     return {
       servicelist: [],
-      fullname: '',
+      name: '',
       birthday: '',
       gender: '',
       tel: '',
-      service: '',
+      serviceId: '',
     }
   },
   mounted() {
     // 開発のためliffコメントアウト
-    // this.$liffInit
-    //   .then(() => {
-    //     this.idToken = liff.getIDToken();
-    //     // this.accessToken = liff.getAccessToken();
-    //   })
-    //   .catch((error) => {
-    //     this.liffError = error
-    //   })
-
-    this.getServiceList()
+    this.$liffInit
+      .then(() => {
+        pass
+      })
+      .catch((error) => {
+        this.liffError = error
+      });
+    this.getServiceList();
   },
 
   methods: {
     async getServiceList() {
       const apiurl =
-        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetServiceMst'
-      const res = await Common.gateway_get(apiurl)
-      this.servicelist = res.Items
+        'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetServiceMst';
+      const res = await Common.gateway_get(apiurl);
+      this.servicelist = res.Items;
     },
     reserve() {
       this.$router.push({path: '/selectdate/', 
                          query: {
-                              accessToken: this.accessToken,
-                              fullname: this.fullname,
+                              name: this.name,
                               birthday: this.birthday,
                               gender: this.gender,
                               tel: this.tel,
-                              service: this.service
+                              serviceId: this.serviceId
                           }
-                        })
+                        });
     },
   },
   // templateの選択

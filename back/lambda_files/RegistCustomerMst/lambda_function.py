@@ -24,7 +24,7 @@ def get_next_seq(table, tablename):
 def lambda_handler(event, context):
     try:
         param = json.loads(event['body'])
-        param = param['params']['data']
+        print(param)
         customerId = param['id']
         
         

@@ -35,21 +35,20 @@ export default {
   data() {
     return {
       // 開発のためliffコメントアウト
-      // this.$liffInit
-      //   .then(() => {
-      //     this.idToken = liff.getIDToken();
-      //     // this.accessToken = liff.getAccessToken();
-      //   })
-      //   .catch((error) => {
-      //     this.liffError = error
-      //   })
       reservationList: [],
       customerMst:{},
       serviceMst:{},
     }
   },
   mounted() {
-    this.getReservationList()
+    this.$liffInit
+      .then(() => {
+        this.idToken = liff.getIDToken();
+      })
+      .catch((error) => {
+        this.liffError = error
+      })
+    this.getReservationList();
   },
   methods:{
     async getReservationList(){  // getCustomerMst, serviceMstから名前を引用したリストを取得
