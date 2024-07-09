@@ -2,7 +2,6 @@ import boto3
 import json
 import decimal
 import datetime
-from boto3.dynamodb.conditions import Attr
 from datetime import timedelta
 
 # DynamoDBオブジェクト
@@ -99,12 +98,12 @@ def get_opening_hour(display_days, time_iter):  # ->{"20240130": ["11:00","12:00
         opening_hour_dict[display_day] = times_list
     return opening_hour_dict
 
-def get_service_term(reserved_service):
+def get_service_term(serviceId):
     """
     指定されたサービス名に対応するサービス所要時間を取得する関数
 
     Args:
-        reserved_service (str): 予約されたサービスの名前
+        serviceId (str): 予約されたサービスの名前
             例: "カット", "カラー", "パーマ"
 
     Returns:
@@ -128,13 +127,13 @@ def get_service_term(reserved_service):
     table = dynamodb.Table('ServiceMst')
     response = table.scan()
 
+    service_term = None
     service_list = response.get('Items', [])
     for service in service_list:
-        if service['name'] ==  reserved_service:
+        if int(service['id']) ==  int(serviceId):
             service_term = service['term']
-            break
-        else:
-            raise KeyError(f"Service '{reserved_service}' not found in the database")
+    if not service_term:
+        raise KeyError(f"Service '{serviceId}' not found in the database")
     return service_term
 
 def get_reserved_list(display_days, time_iter):  # ->{"20240130": ["11:00","12:00"],...}
@@ -158,7 +157,7 @@ def get_reserved_list(display_days, time_iter):  # ->{"20240130": ["11:00","12:0
             }
 
     Note:
-        - この関数はDynamoDBの'ReservationList'テーブルから削除フラグが立っていないデータを取得します。
+        - この関数はDynamoDBの'ReservationList'テーブルからデータを取得します。
         - テーブルには予約の日付（曜日）、開始時間、終了時間が格納されていることを前提としています。
         - 返される時間リストは指定された時間間隔(time_iter)に基づいて生成されます。
 
@@ -170,22 +169,21 @@ def get_reserved_list(display_days, time_iter):  # ->{"20240130": ["11:00","12:0
         }
     """
     reserved_dict = {}
-    table = dynamodb.Table('ReservationList')
     
     # 対象の範囲の予約済データを15分毎の単位で取得
+    table = dynamodb.Table('ReservationList')  # TODO:期間指定できたらよりよい
+    response = table.scan()
+    reserved_datetime_list = response.get('Items', [])
+    
     for display_day in display_days:  # Mon~Sunで繰り返し
         times_list = []
-        # 各日付に対して個別にクエリを実行
-        response = table.scan(
-            FilterExpression=Attr('reserve_date').eq(display_day) & 
-                             (Attr('delete_flag').eq('false') | Attr('delete_flag').not_exists())
-        )
-        reserved_datetime_list = response.get('Items', [])
-        target_dayofweek:str = datetime.datetime.strptime(display_day, '%Y%m%d').strftime('%A')
+        target_date = datetime.datetime.strptime(display_day, '%Y%m%d')
         for reserved_datetime_row in reserved_datetime_list:
-            if reserved_datetime_row['supply_date'] == target_dayofweek:
-                sttime = reserved_datetime_row["supply_sttime"]
-                endtime = reserved_datetime_row["supply_endtime"]
+            reserve_date = datetime.datetime.strptime(reserved_datetime_row['reserve_date'], "%Y-%m-%d")
+            reserve_date = reserve_date.strftime("%Y%m%d")
+            if reserve_date == display_day:
+                sttime = reserved_datetime_row["reserve_sttime"]
+                endtime = reserved_datetime_row["reserve_endtime"]
                 times_list.extend(get_time_intervals(sttime, endtime, time_iter))
         reserved_dict[display_day] = sorted(list(set(times_list)))
     return reserved_dict
@@ -250,7 +248,7 @@ def get_available_slots(reservable_dict, service_term, time_tier):
             # 利用可能な場合、スロットを追加
             if is_available:
                 available_slots[date].append(slot)
-
+    
     return available_slots
     
 def lambda_handler(event, context):
@@ -262,7 +260,7 @@ def lambda_handler(event, context):
             期待される形式:
             {
                 "queryStringParameters": {
-                    "data": '{"display_days": ["20240130", "20240131", ...], "reserved_service": "haircut"}'
+                    "data": '{"display_days": ["20240130", "20240131", ...], "serviceId": "1"}'
                 }
             }
         context (LambdaContext): Lambda実行コンテキスト（この関数では未使用）
@@ -294,7 +292,7 @@ def lambda_handler(event, context):
     Examples:
         >>> event = {
         ...     "queryStringParameters": {
-        ...         "data": '{"display_days": ["20240130", "20240131"], "reserved_service": "haircut"}'
+        ...         "data": '{"display_days": ["20240130", "20240131"], "serviceId": "1"}'
         ...     }
         ... }
         >>> lambda_handler(event, None)
@@ -312,9 +310,7 @@ def lambda_handler(event, context):
         data = event.get('queryStringParameters')  # ["20240130", "20240131", "20240201"...]
         parsed_data = json.loads(data['data'])
         display_days = parsed_data['display_days']
-        reserved_service = parsed_data['reserved_service']
-        print(display_days)
-        print(reserved_service)        
+        serviceId = parsed_data['serviceId']
         
         # 各テーブルから全データを参照する。
         opening_hour_dict = get_opening_hour(display_days, time_iter)
@@ -326,7 +322,7 @@ def lambda_handler(event, context):
             reservable_dict[open_day] = [item for item in open_times if item not in reserved_times]  # {"20240130": ["11:00","12:00"],...}
         
         # サービス提供が可能な時間のみを計算する。
-        service_term = get_service_term(reserved_service)
+        service_term = get_service_term(serviceId)
         serviceable_dict = get_available_slots(reservable_dict, service_term, time_iter)
 
         # 結果を返す

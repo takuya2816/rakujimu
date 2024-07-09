@@ -33,7 +33,7 @@ def lambda_handler(event, context):
             # reserving_flg = parsed_data.get('reservingFlg', False)
 
         # フィルター条件の初期化
-        filter_expression = Attr('delete_flag').eq(False)
+        filter_expression = Attr('delete_flag').eq("false")  # stringでの対応
         current_datetime = datetime.now().isoformat()
         
         # print(f"reserved_flg:{reserved_flg}")  # テスト
@@ -52,6 +52,7 @@ def lambda_handler(event, context):
         # if reserving_flg:
         #     reserving_condition = Attr('reserving_flg').eq(reserving_flg) & Attr('reserve_date').gte(current_datetime)
         #     filter_expression = filter_expression & reserving_condition if filter_expression else reserving_condition
+        print(filter_expression)
 
         # フィルター条件がある場合はスキャンを実行
         if filter_expression:
@@ -61,6 +62,7 @@ def lambda_handler(event, context):
         else:
             # フィルター条件がない場合は全てのレコードを取得
             reservationList = table.scan()
+        print(reservationList)
 
         # CustomerMst, ServiceMst テーブルからデータを参照する
         table = dynamodb.Table('CustomerMst')

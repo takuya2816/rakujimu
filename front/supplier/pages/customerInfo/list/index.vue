@@ -97,6 +97,14 @@ export default {
     }
   },
   mounted() {
+    // 開発のためliffコメントアウト
+    this.$liffInit
+      .then(() => {
+        this.idToken = liff.getIDToken();
+      })
+      .catch((error) => {
+        this.liffError = error
+      }),
     this.getCustomerMst()
   },
   methods:{

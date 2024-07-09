@@ -7,6 +7,7 @@ import logging
 from datetime import datetime, timedelta
 import requests
 from boto3.dynamodb.conditions import Attr
+from urllib.parse import urlencode
 
 # 環境変数 Todo:リファクタリング
 #REMIND_DATE_DIFFERENCE = int(os.getenv(
@@ -14,7 +15,7 @@ from boto3.dynamodb.conditions import Attr
 #LOGGER_LEVEL = os.environ.get("LOGGER_LEVEL")
 #CHANNEL_TYPE = os.environ.get("CHANNEL_TYPE")
 #CHANNEL_ID = os.getenv('OA_CHANNEL_ID', None)
-LIFF_CHANNEL_ID = "2000948278-yXl6L5MR" #os.getenv('LIFF_CHANNEL_ID', None)
+LIFF_CHANNEL_ID = '2000948278' #os.getenv('LIFF_CHANNEL_ID', None)
 
 # DynamoDBオブジェクト
 dynamodb = boto3.resource('dynamodb')
@@ -55,10 +56,10 @@ def get_profile(id_token, channel_id):
         レスポンス情報
     """
     
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
     body = {
-        'id_token': id_token,
-        'client_id': channel_id
+        "id_token": id_token,
+        "client_id": channel_id
     }
 
     response = requests.post(
@@ -68,35 +69,36 @@ def get_profile(id_token, channel_id):
     )
     
     res_body = json.loads(response.text)
+    
+    print(res_body)
+    
     return res_body
 
-# line_idからcustomer_idを取得
-def get_customer_id(lineid, seqtable):
+# lineIdからcustomer_idを取得
+def get_customer_id(lineId, seqtable, birthday, gender, name, tel):
     table = dynamodb.Table('CustomerMst')
 
-    # line_idが一致するアイテムをスキャン
+    # lineIdが一致するアイテムをスキャン
     response = table.scan(
-        FilterExpression=Attr('line_id').eq(lineid)
+        FilterExpression=Attr('line_id').eq(lineId)
     )
-    existing_item = response.get('Item')
+    existing_item = response.get('Items')
 
-    # アイテムが存在しない場合、新しい顧客として登録
-    if existing_item:
-        customer_id = existing_item['id']
-    else:
+    if existing_item: # 既存顧客の場合ID取得
+        customer_id = existing_item[0]['id']
+    else:  # 新規の場合、新しい顧客として登録
         nextseq = get_next_seq(seqtable, 'CustomerMst')
         customer_id = nextseq
-
-        # 現在の日時を取得
-        current_datetime = datetime.now().isoformat()
 
         # 新しい顧客情報
         customer_data = {
             'id': nextseq,
-            'name': "",
-            'reserve_date': current_datetime,
-            'line_id': lineid,
-            'comment': ""
+            'birthday':birthday,
+            'gender': gender,
+            'lineId': lineId,
+            'name': name,
+            'regist_datetime': datetime.now().isoformat(),
+            'tel':tel,
         }
 
         # API GatewayのエンドポイントURL
@@ -104,6 +106,7 @@ def get_customer_id(lineid, seqtable):
 
         # APIリクエストを送信して顧客情報を登録
         response = requests.post(api_url, json=customer_data)
+        print(response)
 
         # レスポンスのステータスコードを確認
         if response.status_code != 200:
@@ -111,20 +114,21 @@ def get_customer_id(lineid, seqtable):
             
     return customer_id
 
-def cal_endtime(reserve_sttime, service_id):
+def cal_endtime(reserveStDatetime, service_id):
     table = dynamodb.Table('ServiceMst')
     response = table.get_item(
         Key={
-            'id': service_id
+            'id': int(service_id)
         }
     )
     item = response.get('Item')
 
-    reserve_sttime = datetime.strptime(reserve_sttime, "%H:%M")
+    reserveStDatetime = datetime.strptime(reserveStDatetime, "%Y%m%d %H:%M")
     service_term = datetime.strptime(item['term'], "%H:%M")
     delta = timedelta(hours=service_term.hour, minutes=service_term.minute)
-
-    return (reserve_sttime + delta).strftime("%H:%M")
+    reserveEndtime = (reserveStDatetime + delta).strftime("%H:%M")    
+    
+    return reserveEndtime
 
 # 既存の予約とかぶっていないことをチェック
 def check_reservable(reserve_id, reserve_date, reserve_sttime, reserve_endtime):
@@ -153,21 +157,25 @@ def lambda_handler(event, context):
     try:
         # パラメータログ、チェック
         logger.info(event)
-        #body = json.loads(event['body'])
-        #if body is None:
-        #    error_msg_display = common_const.const.MSG_ERROR_NOPARAM
-        #    return utils.create_error_response(error_msg_display, 400)
         
-        ## フォームに入力されたデータを得る
+        # フォームに入力されたデータを得る
         param = json.loads(event['body'])
         param = param['params']['data']
+        reserveStDatetime = param['reserveStDatetime']
 
-        reserveDate = param['reserve_date']
-        reserveSttime = param['reserve_sttime']
-        employee = "" # param['employee']
-        serviceId = param['service_id']
-        approvalFlag = param['approval_flag']
-        deleteFlag = param['delete_flag']
+        datetime_obj = datetime.strptime(reserveStDatetime, "%Y%m%d %H:%M")
+        reserveDate = datetime_obj.strftime("%Y-%m-%d")
+        reserveSttime = datetime_obj.strftime("%H:%M")
+        serviceId = param['serviceId']
+        approvalFlag = param['approvalFlag']
+        deleteFlag = param['deleteFlag']
+        employeeId = "" # param['employeeId']
+        supplierId = "" # param['supplierId']
+        
+        birthday = param['birthday']
+        gender = param["gender"]
+        name = param["name"]
+        tel = param['tel']
         memo = param['memo']
 
         
@@ -176,42 +184,34 @@ def lambda_handler(event, context):
         timestamp = str(datetime.fromtimestamp(nowtime))
         
         # reserveEndtimeを算出
-        reserveEndtime = cal_endtime(reserveSttime, serviceId)
+        reserveEndtime = cal_endtime(reserveStDatetime, serviceId)
 
         seqtable = dynamodb.Table('sequence')
         if 'customer_id' in param:
             customerId = param['customer_id']
         else:
-            # customer_id が含まれていない場合は、line_id から取得
-            #ユーザーID取得
+            # customer_id が含まれていない場合は、lineId から取得
             try:
-                user_profile = get_profile(
-                    param['idToken'], LIFF_CHANNEL_ID)
+                user_profile = get_profile(param['idToken'], LIFF_CHANNEL_ID)
                 if 'error' in user_profile and 'expired' in user_profile['error_description']:  # noqa 501
-                    return {
-                        'statusCode' : 403
-                    }
+                    return {'statusCode' : 403}
                 else:
-                    lineid = user_profile['sub']
+                    lineId = str(user_profile['sub'])
             except Exception:
                 logger.exception('不正なIDトークンが使用されています')
-                return {
-                    'statusCode' : 403
-                }
-            customerId = get_customer_id(lineid, seqtable)            
+                return {'statusCode' : 403}
+            customerId = get_customer_id(lineId, seqtable, birthday, gender, name, tel)            
 
         table = dynamodb.Table('ReservationList')
 
-        # line_idとdatetimeで既存の予約を検索
+        # lineIdとdatetimeで既存の予約を検索
         response = table.scan(
             FilterExpression=Attr('customer_id').eq(customerId) & Attr('reserve_date').eq(reserveDate)
         )
-        
         existing_item = response['Items'][0] if response['Items'] else None
-
+        
         if existing_item:
-            if deleteFlag:
-                # 既存の予約を削除
+            if deleteFlag:  # 既存の予約を削除の場合
                 response = table.update_item(
                     Key={
                         'id': existing_item['id']
@@ -223,8 +223,7 @@ def lambda_handler(event, context):
                     },
                     ReturnValues="DELETE_ITEM"
                 )
-            elif approvalFlag:
-                # 既存の予約を承認
+            elif approvalFlag:  # 既存の予約を承認する場合
                 response = table.update_item(
                     Key={
                         'id': existing_item['id']
@@ -256,7 +255,7 @@ def lambda_handler(event, context):
                     Key={
                         'id': existing_item['id']
                     },
-                    UpdateExpression="set reserve_date = :rd, reserve_sttime = :rst, reserve_endtime = :ret, employee_id = :e, service_id = :s, memo = :m, update_datetime = :u",
+                    UpdateExpression="set reserve_date = :rd, reserve_sttime = :rst, reserve_endtime = :ret, service_id = :s, memo = :m, update_datetime = :u",
                     ExpressionAttributeValues={
                         ':rd': reserveDate,
                         ':rst': reserveSttime,
@@ -274,13 +273,12 @@ def lambda_handler(event, context):
             table.put_item(
                 Item = {
                     'id' : nextseq,
-                    'resist_datetime' : timestamp,
+                    'regist_datetime' : timestamp,
                     'reserve_date' : reserveDate,
                     'reserve_sttime' : reserveSttime,
                     'reserve_endtime' : reserveEndtime,
                     'customer_id' : customerId,
                     'delete_flag' : 'false',
-                    'employee_id' : employee,
                     'service_id' : serviceId,
                     'approval_flag' : 'false',
                     'memo' : memo,

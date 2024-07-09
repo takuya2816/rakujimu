@@ -68,14 +68,13 @@ export default {
     },
     async mounted() {
         // 開発のためliffコメントアウト
-        // this.$liffInit
-        //   .then(() => {
-        //     this.idToken = liff.getIDToken();
-        //     // this.accessToken = liff.getAccessToken();
-        //   })
-        //   .catch((error) => {
-        //     this.liffError = error
-        //   })
+        this.$liffInit
+          .then(() => {
+            this.idToken = liff.getIDToken();
+          })
+          .catch((error) => {
+            this.liffError = error
+          });
         try {
             await this.getServiceList();
             await this.getReservationInfo(this.$route.params.id);
