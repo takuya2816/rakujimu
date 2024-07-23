@@ -58,6 +58,7 @@ export default {
     LIFF_ID: process.env.LIFF_ID,
   },
 
+  // dev環境
   server: {
     port: 3000,
     host: "localhost",

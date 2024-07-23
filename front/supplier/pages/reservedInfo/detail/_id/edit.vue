@@ -3,47 +3,35 @@
         <div class="title">
             <h1>予約編集</h1>
         </div>
-        <div class="reservation-edit">
-            <div class="profile">
-                <div class="profile-info">
-                    <div class="detail-item">
-                        <span class="label">申込日時</span>
-                        <span class="value">{{ reservation.regist_datetime | datetime2date }} {{
-                            reservation.regist_datetime |
-                            datetime2hhmm }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="label">氏名</span>
-                        <span class="value">{{ reservation.customer_name }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="label">メニュー</span>
-                        <span class="value">
-                            <select id="service_name" v-model="reservation.service_id" required>
-                                <option v-for="item in servicelist" :key="item.id" :value="item.id">
-                                    {{ item.name }}
-                                </option>
-                            </select>
-                        </span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="label">予約日</span>
-                        <span class="value">
-                            <input id="reserveDate" v-model="reservation.reserve_date" type="date" required>
-                        </span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="label">予約時間</span>
-                        <span class="value">
-                            <input id="reserveTime" v-model="reservation.reserve_sttime" type="time" required>
-                        </span>
-                    </div>
-                    <div class="buttons">
-                        <button class="post-button" @click="updateReservation">更新</button>
-                        <button class="cancel-button" @click="returnReservationDetail">キャンセル</button>
-                        <button class="post-button" @click="removeReservation">削除</button>
-                    </div>
-                </div>
+        <div class="details">
+            <div class="detail-item">
+                <span class="label">申込日時</span>
+                <span class="value">{{ reservation.regist_datetime | datetime2date }} {{
+                    reservation.regist_datetime |
+                    datetime2hhmm }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">氏名</span>
+                <span class="value">{{ reservation.customer_name }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">メニュー</span>
+                <span class="value">
+                    <select id="service_name" v-model="reservation.service_id" required>
+                        <option v-for="item in servicelist" :key="item.id" :value="item.id">
+                            {{ item.name }}
+                        </option>
+                    </select>
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="label">予約開始日時</span>
+                <span class="value">{{ reservation.reserve_date }} {{ hhmmss2hhmm(reservation.reserve_sttime) }}</span>
+            </div>
+            <div class="buttons">
+                <button class="cancel-button" @click="returnReservationDetail">キャンセル</button>
+                <button class="post-button" @click="updateReservation">変更</button>
+                <button class="post-button" @click="removeReservation">削除</button>
             </div>
         </div>
     </div>
@@ -93,6 +81,7 @@ export default {
             }
         },
         async updateReservation() {
+            // メニュー・日時変更をしたい場合は画面遷移、それ以外の場合はpost
             try {
                 const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
                 const res = await common.gateway_post(apiurl, this.reservation)
@@ -133,6 +122,11 @@ export default {
         returnReservationDetail() {
             this.$router.push(`/reservedInfo/detail/${this.$route.params.id}`)
         },
+        hhmmss2hhmm(value) {
+            if (!value) return '';
+            const [hours, minutes] = value.split(':');
+            return `${hours}:${minutes}`;
+        }
     },
 
     filters: {
