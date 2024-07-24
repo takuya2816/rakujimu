@@ -38,17 +38,17 @@ def lambda_handler(event, context):
         # レスポンスデータの内、customerIdに値がある場合絞り込みを行う
         data = event.get('queryStringParameters')
         if data:
-            parsed_data = json.loads(data['data'])
-            customerIds = parsed_data.get('customer_id', False)
-            withReserveInfo = parsed_data.get('withReserveInfo', False)
+            customerId = data.get('customer_id', False)
+            withReserveInfo = data.get('withReserveInfo', False)
     
          # フィルター条件の初期化
         filterExpression = None
     
         # フィルター条件の組み立て
-        if customerIds:
-            customer_condition = Attr('id').is_in([int(custId) for custId in customerIds])
-            filterExpression = customer_condition if filterExpression is None else filterExpression & customer_condition
+        print(customerId)
+        if customerId is not False:
+            customer_condition = Attr('id').eq(int(customerId))
+            filterExpression = filterExpression & customer_condition if filterExpression else customer_condition
     
         # スキャンを実行
         if filterExpression is not None:

@@ -76,7 +76,7 @@ export default {
     async getCustomerMst(customerId) {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
-      const data = {customer_id: [customerId]}
+      const data = {customer_id: customerId}
       const res = await common.gateway_get(apiurl, data)
       this.customer = res[0]
     },
@@ -84,7 +84,7 @@ export default {
     async getReservationList(customerId) {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-      const data = {customer_id: [customerId]}
+      const data = {customer_id: customerId}
       const res = await common.gateway_get(apiurl, data)
       this.reservationList = res.Items
     },

@@ -9,12 +9,7 @@ import requests
 from boto3.dynamodb.conditions import Attr
 from urllib.parse import urlencode
 
-# 環境変数 Todo:リファクタリング
-#REMIND_DATE_DIFFERENCE = int(os.getenv(
-#    'REMIND_DATE_DIFFERENCE'))
-#LOGGER_LEVEL = os.environ.get("LOGGER_LEVEL")
-#CHANNEL_TYPE = os.environ.get("CHANNEL_TYPE")
-#CHANNEL_ID = os.getenv('OA_CHANNEL_ID', None)
+# 環境変数
 LIFF_CHANNEL_ID = '2000948278' #os.getenv('LIFF_CHANNEL_ID', None)
 
 # DynamoDBオブジェクト
@@ -159,26 +154,32 @@ def lambda_handler(event, context):
         ### フォームに入力されたデータを得る
         param = json.loads(event['body'])
         print(param)
-        serviceId = param.get('service_id')  # 顧客側の申込はこちら, TODO:リクエスト方法を合わせたい
-        if not serviceId:
-            param = param['params']['data']  # 承認の場合はこちら
-            serviceId = param.get('service_id')
+        serviceId = param['service_id']
+        # if serviceId==None:  # 削除予定：提供側のcommon変更前
+        #     param = param['params']['data']
+        #     serviceId = param.get('service_id')
         approvalFlag = param['approval_flag']
         deleteFlag = param['delete_flag']
         employeeId = "" # param['employee_id']
         supplierId = "" # param['supplier_id']
         
-        # 予約基本情報　新規予約の場合
-        birthday = param.get('birthday')
-        gender = param.get("gender")
-        name = param.get("name")
-        tel = param.get('tel')
-        memo = param.get('memo')
+        # 予約基本情報　新規予約の場合は値が入る
+        birthday = param.get('birthday', None)
+        gender = param.get("gender", None)
+        name = param.get("name", None)
+        tel = param.get('tel', None)
+        memo = param.get('memo', None)
+        
+        # 承認・削除の場合
+        approvalChangeFlag = param.get('approval_change_flag')
+        deleteChangeFlag = param.get('delete_change_flag')
 
-        # 予約日付　予約編集の場合
+        # 予約日付　予約編集の場合は値が入る
         reservationId = param.get('id',None)
+        print(reservationId)
         reserveDate = param.get('reserve_date', None)
         reserveSttime = param.get('reserve_sttime', None)
+        
         # 予約日付　新規予約の場合
         if not reserveDate:
             reserveStDatetime = param['reserve_st_datetime']
@@ -194,13 +195,10 @@ def lambda_handler(event, context):
         reserveEndtime = cal_endtime(reserveDate+" "+reserveSttime, serviceId)
         
         ### customer_idを取得
-        print(reservationId)
-        if reservationId:  # 予約編集であれば予約リストを受け取る
+        if reservationId:  # 予約編集の場合
             table = dynamodb.Table('ReservationList')
             response = table.scan(FilterExpression=Attr('id').eq(reservationId))
             reservation = response['Items'][0] if response['Items'] else None
-
-        if reservationId:  # 編集の場合
             customerId = int(reservation['customer_id'])
         else:  # 新規の場合
             seqtable = dynamodb.Table('sequence')
@@ -216,10 +214,10 @@ def lambda_handler(event, context):
             customerId = get_customer_id(lineId, seqtable, birthday, gender, name, tel)  # customerMstへの登録も行う        
 
 
-        ### DBとの連携
-        if reservationId:
+        ### ReservationListへの登録・更新
+        if reservationId:  # 更新の場合
             table = dynamodb.Table('ReservationList')
-            if deleteFlag=="true":  # 既存の予約を削除の場合
+            if deleteChangeFlag=="true":  # 既存の予約を削除する場合
                 print(f"delete:{deleteFlag}")
                 response = table.update_item(
                     Key={
@@ -232,7 +230,7 @@ def lambda_handler(event, context):
                     },
                     ReturnValues="ALL_NEW"
                 )
-            elif approvalFlag=="true":  # 既存の予約を承認する場合
+            elif approvalChangeFlag=="true":  # 既存の予約を承認する場合
                 print(f"approvalFlag:{approvalFlag}")
                 response = table.update_item(
                     Key={
@@ -245,8 +243,7 @@ def lambda_handler(event, context):
                     },
                     ReturnValues="UPDATED_NEW"
                 )
-            else:
-                # 既存の予約を更新
+            else:  # 既存の予約を更新する場合
                 if not check_reservable(reservationId, reserveDate, reserveSttime, reserveEndtime):
                     return {
                         "isBase64Encoded": False,
@@ -269,15 +266,13 @@ def lambda_handler(event, context):
                         ':rd': reserveDate,
                         ':rst': reserveSttime,
                         ':ret': reserveEndtime,
-                        ':e': "",
                         ':s': serviceId,
                         ':m': memo,
                         ':u': timestamp
                     },
                     ReturnValues="UPDATED_NEW"
                 )
-        else:            
-            # 新しい予約を作成
+        else:  # 新規の場合
             table = dynamodb.Table('ReservationList')
             nextseq = get_next_seq(seqtable, 'ReservationList')
             table.put_item(

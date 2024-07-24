@@ -102,6 +102,7 @@ export default {
           reserve_sttime: reservation.reserve_sttime, 
           approval_flag: reservation.approval_flag,
           delete_flag: "false",
+          approval_change_flag: "true"
         };
         console.log(JSON.stringify(data))
         var res = await common.gateway_post(apiurl, data)  // TODO:リクエストクエリに含めたいがparamsでかえってきてしまう

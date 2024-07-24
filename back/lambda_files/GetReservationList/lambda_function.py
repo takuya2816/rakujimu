@@ -19,18 +19,18 @@ def lambda_handler(event, context):
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table('ReservationList')
         
-        reservationIds = False
-        customerIds = False
-        reservedFlag = False
-        reservingFlag = False
+        reservation_id = False
+        customer_id = False
+        reserved_flag = False
+        reserving_flag = False
         
         data = event.get('queryStringParameters', False)
+        print(data)
         if data:  # リクエストパラメータがある場合はレコードを絞り込む
-            parsed_data = json.loads(data['data'])
-            reservationIds = parsed_data.get('reservation_id', False)
-            customerIds = parsed_data.get('customer_id', False)
-            # reservedFlag = parsed_data.get('reserved_flag', False)
-            # reservingFlag = parsed_data.get('reserving_flag', False)
+            reservation_id = data.get('reservation_id', False)
+            customer_id = data.get('customer_id', False)
+            # reserved_flag = data.get('reserved_flag', False)
+            # reserving_flag = data.get('reserving_flag', False)
 
         # フィルター条件の初期化
         filter_expression = Attr('delete_flag').eq("false")  # stringでの
@@ -39,12 +39,12 @@ def lambda_handler(event, context):
         # print(f"reserved_flg:{reserved_flg}")  # テスト
         # print(f"reserving_flg:{reserving_flg}")  # テスト
 
-        # フィルター条件の組み立て
-        if reservationIds is not False:
-            reservation_condition = Attr('id').is_in([int(res_id) for res_id in reservationIds])
+        # フィルター条件の組み立て  TODO:list処理からの
+        if reservation_id is not False:
+            reservation_condition = Attr('id').eq(int(reservation_id))
             filter_expression = filter_expression & reservation_condition if filter_expression else reservation_condition
-        if customerIds is not False:
-            customer_condition = Attr('customer_id').is_in([int(cust_id) for cust_id in customerIds])
+        if customer_id is not False:
+            customer_condition = Attr('customer_id').eq(int(customer_id))
             filter_expression = filter_expression & customer_condition if filter_expression else customer_condition
         # if reserved_flg:
         #     reserved_condition = Attr('reserved_flg').eq(reserved_flg) & Attr('reserve_date').lt(current_datetime)

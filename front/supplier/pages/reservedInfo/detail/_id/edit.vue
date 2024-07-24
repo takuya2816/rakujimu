@@ -17,7 +17,7 @@
             <div class="detail-item">
                 <span class="label">メニュー</span>
                 <span class="value">
-                    <select id="service_name" v-model="reservation.service_id" required>
+                    <select id="service_name" v-model="temporaryServiceId" @change="handleServiceChange" required>
                         <option v-for="item in servicelist" :key="item.id" :value="item.id">
                             {{ item.name }}
                         </option>
@@ -26,7 +26,8 @@
             </div>
             <div class="detail-item">
                 <span class="label">予約開始日時</span>
-                <span class="value">{{ reservation.reserve_date }} {{ hhmmss2hhmm(reservation.reserve_sttime) }}</span>
+                <span class="value clickable" @click="selectdatePop">{{ reservation.reserve_date }} {{ hhmmss2hhmm(reservation.reserve_sttime) }}</span>
+                <!-- <i class="fas fa-pen"></i> -->
             </div>
             <div class="buttons">
                 <button class="cancel-button" @click="returnReservationDetail">キャンセル</button>
@@ -34,18 +35,29 @@
                 <button class="post-button" @click="removeReservation">削除</button>
             </div>
         </div>
+        <!-- ポップアップ画面 -->
+        <selectdate v-if="popupFlag" @close="closePopup" @update-date="updateDateTime" :service_id="temporaryServiceId" />
     </div>
 </template>
 
 <script>
 import common from '@/plugins/common'
+import selectdate from './selectdate.vue'
 
 export default {
     layout: 'supplier',
+    components: {
+        selectdate
+    },
     data() {
         return {
             reservation: {regist_datetime: '', customer_name: '', service_id: '', reserve_date: '', reserve_sttime: '', id: ''},
-            servicelist: []
+            servicelist: [],
+            popupFlag: false,
+            originalServiceId: '',
+            originalReserveDate: '',
+            originalReserveStTime: '',
+            temporaryServiceId: ''  // メニュー変更用の一時的な変数
         }
     },
     async mounted() {
@@ -57,12 +69,8 @@ export default {
           .catch((error) => {
             this.liffError = error
           });
-        try {
-            await this.getServiceList();
-            await this.getReservationInfo(this.$route.params.id);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
+        await this.getServiceList();
+        await this.getReservationInfo(this.$route.params.id);
     },
     methods: {
         async getServiceList() {
@@ -71,35 +79,62 @@ export default {
             this.servicelist = res.Items
         },
         async getReservationInfo(reservationId) {
-            try {
-                const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-                const data = { reservation_id: [reservationId] }
-                const res = await common.gateway_get(apiurl, data)
-                this.reservation = res.Items[0]
-            } catch (error) {
-                console.error('Error fetching reservation info:', error);
-            }
+            const apiurl =
+                'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
+            const data = { reservation_id: reservationId }
+            console.log(data)
+            const res = await common.gateway_get(apiurl, data)
+            this.reservation = res.Items[0]  // リスト要素の1つ目を抽出
+            // 元の値を保持
+            this.originalServiceId = this.reservation.service_id;
+            this.originalReserveDate = this.reservation.reserve_date;
+            this.originalReserveStTime = this.reservation.reserve_sttime;
+            this.temporaryServiceId = this.reservation.service_id;  // 一時的な変数に初期値を設定
+        },
+        selectdatePop() {
+            this.popupFlag = true;
+        },
+        handleServiceChange() {
+            // メニューが変更されたら、元の値を保持してポップアップを表示
+            this.selectdatePop();
+        },
+        updateDateTime(newDateTime) {  // 子コンポーネントからのnewDateTimeの渡し方は正しいか
+            console.log('newDateTime:', newDateTime);
+            const [date, time] = newDateTime.split(' ');
+            const year = date.substring(0, 4);
+            const month = date.substring(4, 6);
+            const day = date.substring(6, 8);
+            const formattedDate = new Date(`${year}-${month}-${day}`).toISOString().split('T')[0];
+            this.reservation.reserve_date = formattedDate;
+            this.reservation.reserve_sttime = time;
+            this.reservation.service_id = this.temporaryServiceId;  // 一時的なサービスIDを確定
+            // ポップアップを閉じる
+            this.popupFlag = false;
+        },
+        closePopup() {
+            // ポップアップが閉じられたときに元の値に戻す
+            this.temporaryServiceId = this.reservation.service_id;  // 一時的な変数に元の値を再設定
+            this.popupFlag = false;
         },
         async updateReservation() {
             // メニュー・日時変更をしたい場合は画面遷移、それ以外の場合はpost
             try {
                 const apiurl = 'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
+                console.log('reservation:', this.reservation)
                 const res = await common.gateway_post(apiurl, this.reservation)
                 if (res && res.result === "ok") {
-                    // 保存成功時の処理
                     this.$router.push(`/reservedInfo/detail/${this.$route.params.id}`)
                 } else {
-                    // レスポンスが期待通りでない場合の処理
                     console.error('Unexpected response:', res)
                     alert('保存に失敗しました。予期せぬレスポンスを受け取りました。')
                 }
             } catch (error) {
-                // エラーハンドリング
                 console.error('Error updating reservation:', error)
                 alert('保存中にエラーが発生しました: ' + error.message)
             }
         },
         async removeReservation(reservation) {
+            this.reservation.delete_change_flag = "true"
             this.reservation.delete_flag = "true"
             try {
                 const apiurl =
@@ -210,5 +245,22 @@ input {
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+}
+
+.clickable {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer; /* カーソルをポインターに変更 */
+  color: #007bff; /* リンクのような色 */
+}
+
+.clickable:hover {
+  color: #0056b3; /* ホバー時のテキスト色 */
+}
+
+.fas.fa-pen {
+  margin-left: 5px; /* アイコンの左マージン */
+  font-size: 0.9em; /* アイコンのサイズ */
+  cursor: pointer; /* カーソルをポインターに変更 */
 }
 </style>
