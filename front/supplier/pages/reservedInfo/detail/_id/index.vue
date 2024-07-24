@@ -54,7 +54,8 @@ export default {
       // 仮のAPIコールを実行し、予約情報を取得
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-      const data = { reservation_id: [reservationId] }
+      const data = { reservation_id: reservationId }
+      console.log(data)
       const res = await common.gateway_get(apiurl, data)
       this.reservation = res.Items[0]  // リスト要素の1つ目を抽出
     },
@@ -62,6 +63,7 @@ export default {
     async approveReservation() {
       // 承認ボタンが押されたときの処理
       try {
+        this.reservation.approval_change_flag = "true"
         this.reservation.approval_flag = "true"
         var apiurl =
           'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/RegistReservationList'
@@ -73,6 +75,7 @@ export default {
           reserve_sttime: this.reservation.reserve_sttime, 
           approval_flag: this.reservation.approval_flag,
           delete_flag: "false",
+          approval_change_flag: "true"
         };
         console.log(JSON.stringify(data))
         var res = await common.gateway_post(apiurl, data)  // TODO:リクエストクエリに含めたいがparamsでかえってきてしまう

@@ -22,15 +22,15 @@
     <div class="list-body">
       <div class="list-content">
         <div v-for="reservation in sortedReservations" :key="reservation.id" class="list-record">
-          <a :href="`/reservedInfo/detail/${reservation.id}`" class="reservation-link">
+          <div class="reservation-link" @click="displayDetail(reservation.id)">
             <div class="list-info">
               <div class="list-item">{{ reservation.regist_datetime | datetime2date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
               <div class="list-item">{{ reservation.reserve_date }}<br>{{ reservation.reserve_sttime | hhmmss2hhmm }}</div>
               <div class="list-item">{{ reservation.customer_name }}</div>
               <div class="list-item">{{ reservation.service_name }}</div>
             </div>
-          </a>
-          <button v-if="reservation.approval_flag === 'false'" @click="approveReservation(reservation)" class="reservation-approve">承認</button>
+            <button v-if="reservation.approval_flag === 'false'" @click="approveReservation(reservation)" class="reservation-approve">承認</button>
+          </div>
         </div>
       </div>
     </div>
@@ -45,7 +45,6 @@ import common from '@/plugins/common'
 export default {
   data() {
     return {
-      // 開発のためliffコメントアウト
       reservationList: [],
       customerMst:{},
       serviceMst:{},
@@ -54,6 +53,7 @@ export default {
     }
   },
   mounted() {
+    // 開発のためliffコメントアウト
     this.$liffInit
     .then(() => {
       this.idToken = liff.getIDToken();
@@ -102,6 +102,7 @@ export default {
           reserve_sttime: reservation.reserve_sttime, 
           approval_flag: reservation.approval_flag,
           delete_flag: "false",
+          approval_change_flag: "true"
         };
         console.log(JSON.stringify(data))
         var res = await common.gateway_post(apiurl, data)  // TODO:リクエストクエリに含めたいがparamsでかえってきてしまう
@@ -131,6 +132,10 @@ export default {
         this.sortKey = key;
         this.sortOrder = 'asc';
       }
+    },
+    displayDetail(reservation_id){
+      // 予約詳細画面に遷移
+      this.$router.push(`/reservedInfo/detail/${reservation_id}`)
     }
   },
   filters: {

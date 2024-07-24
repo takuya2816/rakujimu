@@ -19,14 +19,14 @@
     <div class="list-body">
       <div class="list-content">
         <div v-for="customer in sortedCustomers" :key="customer.id" class="list-record">
-          <a :href="`/customerInfo/detail/${customer.id}`" class="customer-link">
+          <div class="customer-link" @click="displayDetail(customer.id)">
             <div class="list-info">
               <div class="list-item">{{ customer.name }}</div>
               <div class="list-item">{{ customer.gender }}</div>
               <div class="list-item">{{ customer.last_reserved_date | datetime2date }}<br>{{ customer.last_reserved_sttime }}</div>
               <div class="list-item">{{ customer.next_reserved_date | datetime2date }}<br>{{ customer.next_reserved_sttime }}</div>
             </div>
-          </a>
+          </div>
         </div>
       </div>
     </div>
@@ -64,15 +64,6 @@ export default {
   layout: 'supplier',
   data() {
     return {
-      // 開発のためliffコメントアウト
-      // this.$liffInit
-      //   .then(() => {
-      //     this.idToken = liff.getIDToken();
-      //     // this.accessToken = liff.getAccessToken();
-      //   })
-      //   .catch((error) => {
-      //     this.liffError = error
-      //   })
       customerMst: [],
       sortKey: 'name', // デフォルトのソートキー
       sortOrder: 'asc' // デフォルトのソート順序
@@ -127,6 +118,9 @@ export default {
         this.sortKey = key;
         this.sortOrder = 'asc';
       }
+    },
+    displayDetail(customer_id) {
+      this.$router.push(`/customerInfo/detail/${customer_id}`)
     }
   },
 }

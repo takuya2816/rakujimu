@@ -38,14 +38,14 @@
       <div class="list-body">
         <div class="list-content">
           <div v-for="reservation in reservationList" :key="reservation.id" class="list-record">
-            <a :href="`/reservedInfo/detail/${reservation.id}`" class="reservation-link">
+            <div class="reservation-link" @click="displayReserveDetail(reservation.id)">
               <div class="list-info">
                 <div class="list-item">{{ reservation.regist_datetime | datetime2date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
                 <div class="list-item">{{ reservation.reserve_date }}<br>{{ reservation.reserve_sttime | hhmmss2hhmm }}</div>
                 <div class="list-item">{{ reservation.customer_name }}</div>
                 <div class="list-item">{{ reservation.service_name }}</div>
               </div>
-            </a>
+            </div>
           </div>
         </div>
       </div>
@@ -76,7 +76,7 @@ export default {
     async getCustomerMst(customerId) {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetCustomerMst'
-      const data = {customer_id: [customerId]}
+      const data = {customer_id: customerId}
       const res = await common.gateway_get(apiurl, data)
       this.customer = res[0]
     },
@@ -84,7 +84,7 @@ export default {
     async getReservationList(customerId) {
       const apiurl =
         'https://hx767oydxg.execute-api.ap-northeast-1.amazonaws.com/rakujimu-app-prod/GetReservationList'
-      const data = {customer_id: [customerId]}
+      const data = {customer_id: customerId}
       const res = await common.gateway_get(apiurl, data)
       this.reservationList = res.Items
     },
@@ -96,6 +96,10 @@ export default {
     returnCustomerList(){
       // 一覧へ戻るボタンが押されたときの処理
       this.$router.push(`/customerInfo/list`)
+    },
+    displayReserveDetail(reservation_id){
+      // 予約詳細画面に遷移
+      this.$router.push(`/reservedInfo/detail/${reservation_id}`)
     }
   },
   filters: {
