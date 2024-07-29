@@ -8,7 +8,6 @@
   text-align: center;
   color: #333;
   font-family: Anonymous Pro;
-  filter: drop-shadow(5px 5px 2px #00000036);
 }
 .title h2 {
   text-align: center;
@@ -35,6 +34,49 @@
 /* ラベルタグの項目 */
 label {
   display: block;
+}
+
+/* 編集ボタンとポストボタンのcss */
+.buttons {
+  display: flex;
+  justify-content: center; /* ボタンを中央揃え */
+  margin-top: 20px; /* 上部にマージンを追加 */
+}
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.edit-button {
+  background-color: #fff;
+  color: #333;
+  margin: 0 10px;
+}
+.post-button {
+  background-color: #949494;
+  color: #333;
+  margin: 0 10px;
+}
+.cancel-button{
+  background-color: #fff;
+  color: #333;
+  margin: 0 10px;
+}
+.return-button{
+  background-color: #fff;
+  color: #333;
+  margin: 0 10px;
+}
+.edit-button:hover {
+  background-color: #ddd;
+}
+.post-button:hover {
+  background-color: #aaa;
+}
+.cancel-button:hover {
+  background-color: #aaa;
 }
 
 

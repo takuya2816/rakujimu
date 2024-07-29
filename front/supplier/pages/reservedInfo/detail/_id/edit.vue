@@ -29,11 +29,11 @@
                 <span class="value clickable" @click="selectdatePop">{{ reservation.reserve_date }} {{ hhmmss2hhmm(reservation.reserve_sttime) }}</span>
                 <!-- <i class="fas fa-pen"></i> -->
             </div>
-            <div class="buttons">
-                <button class="cancel-button" @click="returnReservationDetail">キャンセル</button>
-                <button class="post-button" @click="updateReservation">変更</button>
-                <button class="post-button" @click="removeReservation">削除</button>
-            </div>
+        </div>
+        <div class="buttons">
+            <button class="cancel-button" @click="returnReservationDetail">キャンセル</button>
+            <button class="post-button" @click="updateReservation">変更</button>
+            <button class="post-button" @click="removeReservation">削除</button>
         </div>
         <!-- ポップアップ画面 -->
         <selectdate v-if="popupFlag" @close="closePopup" @update-date="updateDateTime" :service_id="temporaryServiceId" />
@@ -62,13 +62,13 @@ export default {
     },
     async mounted() {
         // 開発のためliffコメントアウト
-        this.$liffInit
-          .then(() => {
-            this.idToken = liff.getIDToken();
-          })
-          .catch((error) => {
-            this.liffError = error
-          });
+        // this.$liffInit
+        //   .then(() => {
+        //     this.idToken = liff.getIDToken();
+        //   })
+        //   .catch((error) => {
+        //     this.liffError = error
+        //   });
         await this.getServiceList();
         await this.getReservationInfo(this.$route.params.id);
     },
@@ -185,6 +185,14 @@ export default {
 </script>
 
 <style scoped>
+.details {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: #ffffff;
+  padding: 20px 5px;
+  border-radius: 8px;
+}
+
 .reservation-edit {
     background-color: #f0f0f0;
     padding: 20px;
@@ -200,8 +208,8 @@ export default {
 .detail-item {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 20px;
-    /* 項目ごとの間隔を広げる */
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .detail-item .label {
@@ -218,31 +226,15 @@ export default {
     text-align: left;
 }
 
-.detail-item input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.edit-form {
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
 label {
     display: block;
     margin-bottom: 5px;
     color: #999;
 }
 
-input {
+select {
     width: 100%;
-    padding: 8px;
+    padding: 5px;
     border: 1px solid #ddd;
     border-radius: 4px;
 }

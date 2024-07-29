@@ -86,38 +86,4 @@ export default {
     flex-basis: 20%;
     text-align: center;
   }
-
-  /* 編集ボタンとポストボタンのcss */
-  .buttons {
-  display: flex;
-  justify-content: space-around;
-  }
-  button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  .edit-button {
-    background-color: #fff;
-    color: #333;
-  }
-  .post-button {
-    background-color: #ccc;
-    color: #333;
-  }
-  .cancel-button{
-    background-color: #ccc;
-    color: #333;
-  }
-  .edit-button:hover {
-    background-color: #ddd;
-  }
-  .post-button:hover {
-    background-color: #aaa;
-  }
-  .cancel-button:hover {
-    background-color: #aaa;
-  }
 </style>

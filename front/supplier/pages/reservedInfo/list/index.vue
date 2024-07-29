@@ -1,4 +1,3 @@
-<!-- 予約一覧画面 -->
 <template>
   <div>
     <div class="title">
@@ -17,19 +16,17 @@
       <div class="list-header-item clickable" @click="sortBy('service_name')">
         メニュー <span v-if="sortKey === 'service_name'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
       </div>
-      <div class="list-header-item">     </div>
+      <div class="list-header-item">操作</div>
     </div>
     <div class="list-body">
-      <div class="list-content">
-        <div v-for="reservation in sortedReservations" :key="reservation.id" class="list-record">
-          <div class="reservation-link" @click="displayDetail(reservation.id)">
-            <div class="list-info">
-              <div class="list-item">{{ reservation.regist_datetime | datetime2date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
-              <div class="list-item">{{ reservation.reserve_date }}<br>{{ reservation.reserve_sttime | hhmmss2hhmm }}</div>
-              <div class="list-item">{{ reservation.customer_name }}</div>
-              <div class="list-item">{{ reservation.service_name }}</div>
-            </div>
-            <button v-if="reservation.approval_flag === 'false'" @click="approveReservation(reservation)" class="reservation-approve">承認</button>
+      <div v-for="reservation in sortedReservations" :key="reservation.id" class="list-record">
+        <div class="reservation-link" @click="displayReserveDetail(reservation.id)">
+          <div class="list-item">{{ reservation.regist_datetime | datetime2date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
+          <div class="list-item">{{ reservation.reserve_date }}<br>{{ reservation.reserve_sttime | hhmmss2hhmm }}</div>
+          <div class="list-item">{{ reservation.customer_name }}</div>
+          <div class="list-item">{{ reservation.service_name }}</div>
+          <div class="list-item">
+            <button v-if="reservation.approval_flag === 'false'" @click.stop="approveReservation(reservation)" class="reservation-approve">承認</button>
           </div>
         </div>
       </div>
@@ -39,6 +36,8 @@
     </div>
   </div>
 </template>
+
+
 
 <script>
 import common from '@/plugins/common'
@@ -54,13 +53,13 @@ export default {
   },
   mounted() {
     // 開発のためliffコメントアウト
-    this.$liffInit
-    .then(() => {
-      this.idToken = liff.getIDToken();
-    })
-    .catch((error) => {
-      this.liffError = error
-    })
+    // this.$liffInit
+    // .then(() => {
+    //   this.idToken = liff.getIDToken();
+    // })
+    // .catch((error) => {
+    //   this.liffError = error
+    // })
     this.getReservationList();
   },
   computed: {
@@ -133,7 +132,7 @@ export default {
         this.sortOrder = 'asc';
       }
     },
-    displayDetail(reservation_id){
+    displayReserveDetail(reservation_id){
       // 予約詳細画面に遷移
       this.$router.push(`/reservedInfo/detail/${reservation_id}`)
     }
@@ -171,12 +170,31 @@ export default {
 .clickable:hover{
   background-color: #f0f0f0;
 }
-.reservation-link {
-  display: flex;
-  flex-grow: 1;
-  text-decoration: none;
-  color: inherit;
+
+.list-header-item, .list-item {
+  text-align: center; /* 中央揃え */
 }
+
+.list-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 400px; /* 高さを固定 */
+  overflow-y: auto; /* 縦スクロールを有効にする */
+}
+
+.list-header, .list-record {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 各カラムを均等に分割 */
+  align-items: center; /* 垂直方向の中央揃え */
+  padding: 10px 0;
+  text-align: center; /* 中央揃え */
+}
+
+.reservation-link {
+  display: contents; /* 親要素としてのレイアウト影響を排除 */
+  cursor: pointer; /* クリック可能なカーソル */
+}
+
 .reservation-approve {
   padding: 5px 10px;
   background-color: #ccc;
@@ -184,10 +202,22 @@ export default {
   text-decoration: none;
   color: #333;
   font-size: 14px;
-  margin-left: 10px;
+  cursor: pointer;
 }
 
 .reservation-approve:hover {
   background-color: #aaa;
 }
+
+.list-record:hover {
+  background-color: #f0f0f0;
+}
+
+.list-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
 </style>
