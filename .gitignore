@@ -1,5 +1,6 @@
 back/lambda_files/GetReservableList/__pycache__
-tests/__pycache__
+__pycache__
+tests
 
 package-lock.json"
 .babelrc"
@@ -13,3 +14,7 @@ package.json"
 
 node_modules/*
 dist/*
+
+python
+python.zip
+
