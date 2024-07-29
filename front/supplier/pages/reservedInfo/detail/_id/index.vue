@@ -23,6 +23,10 @@
         <span class="value">{{ reservation.reserve_date }} {{ hhmmss2hhmm(reservation.reserve_sttime) }}</span>
       </div>
       <div class="detail-item">
+        <span class="label">メモ</span>
+        <span class="value">{{ reservation.memo }}</span>
+      </div>
+      <div class="detail-item">
         <span class="label">承認日時</span>
         <span class="value">{{ reservation.approval_flag == "true" ? datetime2date(reservation.approval_datetime)+" "+datetime2hhmm(reservation.approval_datetime) : '-' }}</span>
       </div>
@@ -82,6 +86,7 @@ export default {
           reserve_date: this.reservation.reserve_date,
           reserve_sttime: this.reservation.reserve_sttime, 
           approval_flag: this.reservation.approval_flag,
+          memo: this.reservation.memo,
           delete_flag: "false",
           approval_change_flag: "true"
         };
