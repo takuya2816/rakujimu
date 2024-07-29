@@ -3,6 +3,7 @@ import json
 import time
 import datetime
 from boto3.dynamodb.conditions import Attr
+import pytz
 
 # DynamoDBオブジェクト
 dynamodb = boto3.resource('dynamodb')
@@ -34,8 +35,9 @@ def lambda_handler(event, context):
         lineId = param['line_id']
         customerId = param.get('id', None)
         
-        nowtime = time.time()
-        timestamp = str(datetime.datetime.fromtimestamp(nowtime))
+        jst = pytz.timezone('Asia/Tokyo')
+        now = datetime.datetime.now(jst)
+        timestamp = now.isoformat()
         
         if customerId!=None:
             # 既存のデータを更新

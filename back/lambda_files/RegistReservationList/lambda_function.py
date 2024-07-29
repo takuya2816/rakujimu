@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import requests
 from boto3.dynamodb.conditions import Attr
 from urllib.parse import urlencode
+import pytz
 
 # 環境変数
 LIFF_CHANNEL_ID = '2000948278' #os.getenv('LIFF_CHANNEL_ID', None)
@@ -182,8 +183,9 @@ def lambda_handler(event, context):
             reserveSttime = datetime_obj.strftime("%H:%M")
         
         # 現在の時刻を取得
-        nowtime = time.time()
-        timestamp = str(datetime.fromtimestamp(nowtime))
+        jst = pytz.timezone('Asia/Tokyo')
+        now = datetime.now(jst)
+        timestamp = now.isoformat()
         
         # reserveEndtimeを算出
         reserveEndtime = cal_endtime(reserveDate+" "+reserveSttime, serviceId)
