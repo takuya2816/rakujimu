@@ -29,6 +29,10 @@
                 <span class="value clickable" @click="selectdatePop">{{ reservation.reserve_date }} {{ hhmmss2hhmm(reservation.reserve_sttime) }}</span>
                 <!-- <i class="fas fa-pen"></i> -->
             </div>
+            <div class="detail-item">
+                <span class="label">メモ</span>
+                <textarea v-model="reservation.memo" class="value"></textarea>
+            </div>
         </div>
         <div class="buttons">
             <button class="cancel-button" @click="returnReservationDetail">キャンセル</button>
@@ -51,7 +55,7 @@ export default {
     },
     data() {
         return {
-            reservation: {regist_datetime: '', customer_name: '', service_id: '', reserve_date: '', reserve_sttime: '', id: ''},
+            reservation: {regist_datetime: '', customer_name: '', service_id: '', reserve_date: '', reserve_sttime: '', id: '', memo:'',},
             servicelist: [],
             popupFlag: false,
             originalServiceId: '',
@@ -254,5 +258,15 @@ select {
   margin-left: 5px; /* アイコンの左マージン */
   font-size: 0.9em; /* アイコンのサイズ */
   cursor: pointer; /* カーソルをポインターに変更 */
+}
+
+textarea {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical; /* テキストエリアのサイズを垂直方向にのみ変更可能にする */
+    font-family: inherit; /* 親要素のフォントを継承 */
+    font-size: inherit; /* 親要素のフォントサイズを継承 */
 }
 </style>
