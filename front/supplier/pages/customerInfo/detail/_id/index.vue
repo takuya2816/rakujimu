@@ -1,11 +1,9 @@
-<!-- 顧客詳細画面 -->
-
 <template>
   <div>
     <div class="title">
       <h1>顧客詳細</h1>
     </div>
-    <div class="customer-details">
+    <div class="details">
       <div class="profile">
         <div class="profile-picture"></div>
         <div class="profile-info">
@@ -36,26 +34,23 @@
         <div class="list-header-item">メニュー</div>
       </div>
       <div class="list-body">
-        <div class="list-content">
-          <div v-for="reservation in reservationList" :key="reservation.id" class="list-record">
-            <div class="reservation-link" @click="displayReserveDetail(reservation.id)">
-              <div class="list-info">
-                <div class="list-item">{{ reservation.regist_datetime | datetime2date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
-                <div class="list-item">{{ reservation.reserve_date }}<br>{{ reservation.reserve_sttime | hhmmss2hhmm }}</div>
-                <div class="list-item">{{ reservation.customer_name }}</div>
-                <div class="list-item">{{ reservation.service_name }}</div>
-              </div>
-            </div>
+        <div v-for="reservation in reservationList" :key="reservation.id" class="list-record">
+          <div class="reservation-link" @click="displayReserveDetail(reservation.id)">
+            <div class="list-item">{{ reservation.regist_datetime | datetime2date }}<br>{{ reservation.regist_datetime | datetime2hhmm }}</div>
+            <div class="list-item">{{ reservation.reserve_date }}<br>{{ reservation.reserve_sttime | hhmmss2hhmm }}</div>
+            <div class="list-item">{{ reservation.customer_name }}</div>
+            <div class="list-item">{{ reservation.service_name }}</div>
           </div>
         </div>
       </div>
     </div>
     <div class="buttons">
-      <button class="edit-button" @click="editCustomerInfo">編集</button>
       <button class="return-button" @click="returnCustomerList">一覧へ戻る</button>
+      <button class="edit-button" @click="editCustomerInfo">編集</button>
     </div>
   </div>
-</template> 
+</template>
+
 
 
 <script>
@@ -69,6 +64,14 @@ export default {
     }
   },
   mounted() {
+    // 開発のためliffコメントアウト
+    // this.$liffInit
+    //   .then(() => {
+    //     this.idToken = liff.getIDToken();
+    //   })
+    //   .catch((error) => {
+    //     this.liffError = error
+    //   }),
     this.getCustomerMst(this.$route.params.id)
     this.getReservationList(this.$route.params.id)
   },
@@ -129,12 +132,17 @@ export default {
 
 <style>
 .details {
-  margin-bottom: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: #ffffff;
+  padding: 20px 5px;
+  border-radius: 8px;
 }
 .detail-item {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px; /* 項目ごとの間隔を広げる */
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 .detail-item .label {
   color: #999;
@@ -147,4 +155,33 @@ export default {
   flex-basis: 60%;
   text-align: left;
 }
+
+.list-header-item, .list-item {
+  text-align: center; /* 中央揃え */
+}
+
+.list-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 400px; /* 高さを固定 */
+  overflow-y: auto; /* 縦スクロールを有効にする */
+}
+
+.list-header, .list-record {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 各カラムを均等に分割 */
+  align-items: center; /* 垂直方向の中央揃え */
+  padding: 10px 0;
+  text-align: center; /* 中央揃え */
+}
+
+.reservation-link {
+  display: contents; /* 親要素としてのレイアウト影響を排除 */
+  cursor: pointer; /* クリック可能なカーソル */
+}
+
+.list-record:hover {
+  background-color: #f0f0f0;
+}
+
 </style>

@@ -4,8 +4,8 @@
       <div class="popup-content">
         <button class="close-button" @click="closePopup">×</button>
         <div class="contactForm">
+          <div class="message">開始時刻を選択してください</div><br />
           <div class="form-group">
-            <label for="datetime">■施術開始時刻</label><br />
             <div class="content">
               <div class="week-move">
                 <div class="prev" @click="getPrevWeek">＜前週</div>
@@ -198,6 +198,7 @@
   
   .contactForm {
     width: 100%;
+    text-align: center;
   }
   
   .form-group {
@@ -229,10 +230,15 @@
   .send {
     margin-top: 15px;
     padding: 10px 20px;
-    background-color: #4CAF50;
+    background-color: #949494;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+  }
+
+  .message{
+    text-align: center;
+    font-size: 1.2em;
   }
   </style>

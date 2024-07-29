@@ -25,37 +25,23 @@ def lambda_handler(event, context):
     try:
         param = json.loads(event['body'])
         print(param)
-        customerId = param.get('id')  # 顧客側からの申込はこちら, TODO:リクエスト方法を合わせたい
-        if not customerId:
-            param = param['params']['data']  # 承認の場合はこちら
-            customerId = param['id']
-        
-        
-        # idから項目検索
         table = dynamodb.Table('CustomerMst')
-        response = table.get_item(
-            Key={
-                'id': int(customerId)
-            }
-        )
-        
-        existing_item = response.get('Item')
         
         name = param['name']
-        address = param.get('address', 'None')
-        lineId = param.get('line_id', 'None')
         gender = param['gender']
         tel = str(param['tel'])
         birthday = param['birthday']
+        lineId = param['line_id']
+        customerId = param.get('id', None)
         
         nowtime = time.time()
         timestamp = str(datetime.datetime.fromtimestamp(nowtime))
         
-        if existing_item:
+        if customerId!=None:
             # 既存のデータを更新
             response = table.update_item(
                 Key={
-                    'id': existing_item['id']  # プライマリキー 'id' を使用
+                    'id': customerId  # プライマリキー 'id' を使用
                 },
                 UpdateExpression="set #n = :n, gender = :g, tel = :t, birthday = :b, update_datetime = :u",
                 ExpressionAttributeNames={
@@ -73,11 +59,12 @@ def lambda_handler(event, context):
         else:
             # 新しいデータを作成
             seqtable = dynamodb.Table('sequence')
-            nextseq = get_next_seq(seqtable, 'CustomerMst')
+            customerId = int(get_next_seq(seqtable, 'CustomerMst'))
+            print(customerId)
             
             table.put_item(
                 Item = {
-                    'id' : nextseq,
+                    'id' : customerId,
                     'line_id' : lineId,
                     'name' : name,
                     'gender' : gender,
@@ -97,7 +84,7 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Methods': 'POST,GET',
                 'Access-Control-Allow-Origin': '*'
             },
-            "body": json.dumps({"result":"ok"})
+            "body": json.dumps({"customerId":customerId, "result":"ok"})  # 2024/07/29 岸変更
         }
         
     except Exception as e:

@@ -1,4 +1,3 @@
-<!-- 顧客一覧画面 -->
 <template>
   <div>
     <div class="title">
@@ -17,16 +16,12 @@
       </div>
     </div>
     <div class="list-body">
-      <div class="list-content">
-        <div v-for="customer in sortedCustomers" :key="customer.id" class="list-record">
-          <div class="customer-link" @click="displayDetail(customer.id)">
-            <div class="list-info">
-              <div class="list-item">{{ customer.name }}</div>
-              <div class="list-item">{{ customer.gender }}</div>
-              <div class="list-item">{{ customer.last_reserved_date | datetime2date }}<br>{{ customer.last_reserved_sttime }}</div>
-              <div class="list-item">{{ customer.next_reserved_date | datetime2date }}<br>{{ customer.next_reserved_sttime }}</div>
-            </div>
-          </div>
+      <div v-for="customer in sortedCustomers" :key="customer.id" class="list-record">
+        <div class="customer-link" @click="displayDetail(customer.id)">
+          <div class="list-item">{{ customer.name }}</div>
+          <div class="list-item">{{ customer.gender }}</div>
+          <div class="list-item">{{ customer.last_reserved_date | datetime2date }}<br>{{ customer.last_reserved_sttime }}</div>
+          <div class="list-item">{{ customer.next_reserved_date | datetime2date }}<br>{{ customer.next_reserved_sttime }}</div>
         </div>
       </div>
     </div>
@@ -35,6 +30,7 @@
     </div>
   </div>
 </template>
+
 
 <script>
 import common from '@/plugins/common'
@@ -89,13 +85,13 @@ export default {
   },
   mounted() {
     // 開発のためliffコメントアウト
-    this.$liffInit
-      .then(() => {
-        this.idToken = liff.getIDToken();
-      })
-      .catch((error) => {
-        this.liffError = error
-      }),
+    // this.$liffInit
+    //   .then(() => {
+    //     this.idToken = liff.getIDToken();
+    //   })
+    //   .catch((error) => {
+    //     this.liffError = error
+    //   }),
     this.getCustomerMst()
   },
   methods:{
@@ -127,16 +123,39 @@ export default {
 </script>
 
 <style>
-.customer-link {
-  display: flex;
-  flex-grow: 1;
-  text-decoration: none;
-  color: inherit;
-}
 .clickable {
   cursor: pointer;
 }
 .clickable:hover {
   background-color: #f0f0f0;
 }
+
+.list-header-item, .list-item {
+  text-align: center; /* 中央揃え */
+}
+
+.list-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 400px; /* 高さを固定 */
+  overflow-y: auto; /* 縦スクロールを有効にする */
+}
+
+.list-header, .list-record {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 各カラムを均等に分割 */
+  align-items: center; /* 垂直方向の中央揃え */
+  padding: 10px 0;
+  text-align: center; /* 中央揃え */
+}
+
+.customer-link {
+  display: contents; /* 親要素としてのレイアウト影響を排除 */
+  cursor: pointer; /* クリック可能なカーソル */
+}
+
+.list-record:hover {
+  background-color: #f0f0f0;
+}
+
 </style>

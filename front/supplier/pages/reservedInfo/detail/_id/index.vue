@@ -29,9 +29,9 @@
     </div>
     <div>
       <div class="buttons">
+        <button class="return-button" @click="returnReservationList">一覧へ戻る</button>
         <button class="edit-button" @click="editReservationInfo">編集</button>
         <button v-if="reservation.approval_flag === 'false'" @click="approveReservation" class="post-button">承認</button>
-        <button class="post-button" @click="returnReservationList">一覧へ戻る</button>
       </div>
     </div>
   </div>
@@ -47,6 +47,14 @@ export default {
     }
   },
   mounted() {
+    // 開発のためliffコメントアウト
+    // this.$liffInit
+    //   .then(() => {
+    //     this.idToken = liff.getIDToken();
+    //   })
+    //   .catch((error) => {
+    //     this.liffError = error
+    //   });
     this.getReservationInfo(this.$route.params.id)
   },
   methods: {
@@ -129,14 +137,18 @@ export default {
 
 <style>
 .details {
-  margin-bottom: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: #ffffff;
+  padding: 20px 5px;
+  border-radius: 8px;
 }
 
 .detail-item {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
-  /* 項目ごとの間隔を広げる */
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .detail-item .label {

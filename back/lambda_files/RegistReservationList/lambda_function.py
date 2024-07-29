@@ -80,12 +80,7 @@ def get_customer_id(lineId, seqtable, birthday, gender, name, tel):
     if existing_item: # 既存顧客の場合はIDを取得
         customer_id = existing_item[0]['id']
     else:  # 新規の場合は新しい顧客として登録
-        nextseq = get_next_seq(seqtable, 'CustomerMst')
-        customer_id = nextseq
-
-        # 新しい顧客情報
         customer_data = {
-            'id': nextseq,
             'birthday':birthday,
             'gender': gender,
             'line_id': lineId,
@@ -100,6 +95,8 @@ def get_customer_id(lineId, seqtable, birthday, gender, name, tel):
         # APIリクエストを送信して顧客情報を登録
         response = requests.post(api_url, json=customer_data)
         print(response)
+        response_json = response.json()
+        customer_id = response_json['customerId']
 
         # レスポンスのステータスコードを確認
         if response.status_code != 200:
@@ -155,9 +152,6 @@ def lambda_handler(event, context):
         param = json.loads(event['body'])
         print(param)
         serviceId = param['service_id']
-        # if serviceId==None:  # 削除予定：提供側のcommon変更前
-        #     param = param['params']['data']
-        #     serviceId = param.get('service_id')
         approvalFlag = param['approval_flag']
         deleteFlag = param['delete_flag']
         employeeId = "" # param['employee_id']
